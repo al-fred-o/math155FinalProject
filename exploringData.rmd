@@ -1,0 +1,39 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+
+library(ggplot2)
+library(TSA)
+```
+
+## Importing/Processing Data
+
+```{r}
+data <- read.csv("sales_revenue_clean.csv")
+```
+
+
+## Initial Plot of Data
+
+```{r}
+Month=c('J','F','M','A','M','J','J','A','S','O','N','D')
+
+time = seq(as.Date("1990-01-01"), as.Date("2021-01-01"), by="months")
+
+series <- ts(data$R_Sales,start=c(1990,1),frequency=12)
+
+
+plot(series)
+points(series,pch=Month)
+
+```
+
+```{r}
+data$Year[length(data$Year)]
+
+data$MONTH[length(data$MONTH)]
+
+```
+
+
