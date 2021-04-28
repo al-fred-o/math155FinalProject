@@ -5,7 +5,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+knitr::opts_chunk$set(fig.width=8, fig.height=5) 
 
 library(ggplot2)
 library(TSA)
@@ -22,7 +22,7 @@ data <- read_csv("sales_revenue_clean.csv")
 ```{r}
 data$Tot_Sale
 x = as.numeric(data$Tot_Sales)
-x
+# x
 ```
 
 
@@ -69,7 +69,6 @@ points(rSales,pch=Month)
 ```
 
 ```{r}
-
 plot(rRev, main = "Residential Revenue")
 points(rRev,pch=Month)
 ```
@@ -84,6 +83,9 @@ points(totalSales,pch=Month)
 
 plot(totalPrice, main = "Total Price")
 points(totalPrice,pch=Month)
+
+plot(totalRev, main = "Total Revenue")
+points(totalRev,pch=Month)
 ```
 
 ```{r}
@@ -96,7 +98,7 @@ plot(cbind(rMA),plot.type='single',col=4:1,lwd=2, ylab="flow", main = "Residenti
 lines(rSales)
 
 cMA = filter(cSales,rep(1,13)/13,sides=2) # 1 year MA
-plot(cbind(cMA),plot.type='single',col=4:1,lwd=2, ylab="flow", main = "C MA")
+plot(cbind(cMA),plot.type='single',col=4:1,lwd=2, ylab="flow", main = "Construction MA")
 lines(cSales)
 
 iMA = filter(iSales,rep(1,13)/13,sides=2) # 1 year MA
@@ -112,8 +114,93 @@ plot(cbind(totalMA,rMA,cMA, iMA),plot.type='single',col=4:1,lwd=2, ylab="sales")
 ```
 
 ```{r}
-bc = BoxCox.ar(totalSales)
+acf(totalRev)
+pacf(totalRev)
 ```
 
 
+```{r}
+# bc = BoxCox.ar(totalSales)
+```
+```{r}
+# bc$mle
+# bc$loglike
+```
+
+```{r}
+# mle is -0.6
+total_transformed = totalRev^(-0.6)
+plot(total_transformed)
+```
+
+```{r}
+Time = time(total_transformed)
+totalRev_LM = lm(totalRev ~ Time)
+summary(totalRev_LM)
+```
+
+```{r}
+plot(totalRev_LM)
+```
+
+```{r}
+plot(totalRev_LM$residuals)
+plot(rstandard(totalRev_LM))
+linear_residuals = rstandard(totalRev_LM)
+plot(diff(rstandard(totalRev_LM), k = 12))
+```
+
+
+```{r}
+acf(total_transformed)
+pacf(total_transformed)
+```
+
+```{r}
+acf(diff(total_transformed))
+pacf(diff(total_transformed))
+```
+
+```{r}
+acf(diff(diff(total_transformed), 12))
+pacf(diff(diff(total_transformed), 12))
+```
+
+```{r}
+eacf(diff(diff(total_transformed), 12))
+armasubsets(diff(diff(total_transformed), 12), nar = 12, nma = 12)
+```
+
+```{r}
+acf(linear_residuals)
+pacf(linear_residuals)
+```
+
+```{r}
+acf(diff(linear_residuals, 12))
+pacf(diff(linear_residuals, 12))
+eacf(diff(linear_residuals, 12))
+```
+
+```{r}
+runs(diff(linear_residuals, 12))
+shapiro.test(diff(linear_residuals, 12))
+```
+
+```{r}
+sarima1 = arima(linear_residuals, order = c(1,0,0), seasonal = list(order = c(0,1,0)))
+plot(sarima1)
+```
+
+```{r}
+acf(sarima1$residuals)
+pacf(sarima1$residuals)
+```
+
+
+```{r}
+plot(sarima1$residuals)
+runs(sarima1$residuals)
+shapiro.test(sarima1$residuals)
+```
 
