@@ -42,7 +42,7 @@ stationary_test <- function(series){
 
 ```{r}
 cRev <- ts(data$C_Revenue/1000000,start=c(1990,1),frequency=12)
-plot_months(cRev, main = "Total Revenue (1990-2020)", ylab = "Revenue (Millions)", xlab = "Year")
+plot_months(cRev, main = "Commercial Revenue (1990-2020)", ylab = "Revenue (Millions)", xlab = "Year")
 ```
 
 ```{r}
@@ -53,7 +53,7 @@ totalRev2 = window(cRev, start = c(2008, 1))
 actual = window(totalRev2, start = c(2019,1))
 totalRev2 = window(totalRev2, start = c(2008,2), end = c(2019,1))
 
-plot_months(totalRev2, main = "Total Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
+plot_months(totalRev2, main = "Commercial Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
 
 
 ```
@@ -84,30 +84,40 @@ pacf(recRev)
 
 ```{r}
 diffRev = diff(recRev)
-plot_months(diffRev, main = "First Difference of Transformed Revenue", ylab = "First Difference of Transformed Revenue", xlab = "Year")
+plot_months(diffRev, main = "First Difference of Revenue", ylab = "First Difference of Revenue", xlab = "Year")
+
+secDiffRev = diff(diffRev)
+
+acf(diffRev, main = "First Difference ACF")
+acf(secDiffRev)
 ```
 
 
 ```{r}
 seasDiffRev = diff(diffRev, lag = 12)
-plot_months(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference of Transformed Revenue", ylab = "First Non-Seasonal and Seasonal Difference", xlab = "Year")
-acf(seasDiffRev)
+plot_months(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference of Revenue", ylab = "First Non-Seasonal and Seasonal Difference", xlab = "Year")
+acf(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference ACF")
 pacf(seasDiffRev)
 ```
 
 
 ```{r}
-eacf(seasDiffRev)
+eacf(seasDiffRev, ar.max = 12)
 plot(armasubsets(seasDiffRev, nar = 12, nma = 12))
+
+plot(armasubsets(recRev, nar = 12, nma = 12))
+plot(armasubsets(diffRev, nar = 12, nma = 12))
+
+plot(armasubsets(secDiffRev, nar = 12, nma = 12))
 ```
 
 
 ```{r}
-model1 = arima(recRev, order = c(2,1,0), seasonal = list(order=c(0,1,1),period= 12))
-model2 = arima(recRev, order = c(2,1,1), seasonal = list(order=c(0,1,1),period= 12))
+model1 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(0,1,1),period= 12))
+model2 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(1,1,1),period= 12))
 
-model3 = arima(recRev, order = c(2,1,0), seasonal = list(order=c(1,1,1),period= 12))
-model4 = arima(recRev, order = c(2,1,1), seasonal = list(order=c(1,1,1),period= 12))
+model3 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(2,1,1),period= 12))
+model4 = arima(recRev, order = c(2,0,0), seasonal = list(order=c(0,1,1),period= 12))
 
 ```
 
@@ -122,10 +132,10 @@ model4
 
 
 ```{r}
-# library(forecast)
-# model4 <-auto.arima(recRev)
-# model4 = arima(recRev, order = c(2,0,0), seasonal = list(order=c(0,1,1),period= 12))
-# model4
+#library(forecast)
+#model4 <-auto.arima(recRev)
+#model4 = arima(recRev, order = c(2,0,0), seasonal = list(order=c(0,1,1),period= 12))
+#model4
 ```
 
 

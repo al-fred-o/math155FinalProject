@@ -203,12 +203,15 @@ LB.test(model5)
 
 #plot(fitted(model5), col = 'red')
 #lines(recRev, pch = 3)
-plot(fitted(model4), col = 'green', main = "Plotting Log Revenue With Model 4", ylab = "Log Revenue")
+plot(fitted(model4), col = 'green', main = "Plotting Log Revenue With Model 4", ylab = "Log Revenue", xlab = "Years")
 lines(recRev, pch = 3)
 
 model <- model4
 model
 
+plot(res4, main = "Standardized Residuals of Model 4", ylab = "Residuals")
+acf(res4)
+hist(res4)
 ```
 
 ```{r}
