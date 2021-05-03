@@ -117,13 +117,13 @@ plot(armasubsets(secDiffRev, nar = 12, nma = 12))
 
 ```{r}
 model1 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(0,1,2),period= 12))
-model2 = arima(recRev, order = c(0,1,2), seasonal = list(order=c(0,1,1),period= 12))
+model2 = arima(recRev, order = c(0,1,0), seasonal = list(order=c(0,1,1),period= 12))
 
 model3 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(0,1,2),period= 12))
 model4 = arima(recRev, order = c(0,1,2), seasonal = list(order=c(1,1,1),period= 12))
 # model5 = arima(recRev, order = c(0,2,1), season1al = list(order=c(1,1,1),period= 12))
-model5 = arima(recRev, order = c(0,1,2), seasonal = list(order=c(1,1,2),period= 12))
-model5
+# model5 = arima(recRev, order = c(0,1,2), seasonal = list(order=c(1,1,2),period= 12))
+# model5
 ```
 
 
@@ -149,7 +149,7 @@ res1 = rstandard(model1)
 res2 = rstandard(model2)
 res3 = rstandard(model3)
 res4 = rstandard(model4)
-res5 = rstandard(model5)
+# res5 = rstandard(model5)
 
 ```
 
@@ -209,7 +209,7 @@ lines(recRev, pch = 3)
 model <- model4
 model
 
-plot(res4, main = "Standardized Residuals of Model 4", ylab = "Residuals")
+plot_months(res4, main = "Standardized Residuals of Model 4", ylab = "Residuals")
 acf(res4)
 hist(res4)
 ```

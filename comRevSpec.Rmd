@@ -75,7 +75,7 @@ recRev = totalRev2^(1)
 actual = actual^(1)
 
 plot_months(recRev, main = "Transformed Revenue (2008-2020)", ylab = "Revenue", xlab = "Year")
-acf(recRev)
+acf(recRev, main = "Commercial Revenue ACF")
 pacf(recRev)
 
 ```
@@ -113,11 +113,11 @@ plot(armasubsets(secDiffRev, nar = 12, nma = 12))
 
 
 ```{r}
-model1 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(0,1,1),period= 12))
-model2 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(1,1,1),period= 12))
+model1 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(1,1,1),period= 12))
+model2 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(1,1,2),period= 12))
 
 model3 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(2,1,1),period= 12))
-model4 = arima(recRev, order = c(2,0,0), seasonal = list(order=c(0,1,1),period= 12))
+model4 = arima(recRev, order = c(0,1,2), seasonal = list(order=c(1,1,1),period= 12))
 
 ```
 
@@ -188,18 +188,20 @@ LB.test(model4)
 ```{r}
 
 model = arima(recRev, order = c(0,1,0), seasonal = list(order=c(0,1,1),period= 12))
-plot(fitted(model2), col = 'red')
-lines(recRev, pch = 3)
-plot(fitted(model4), col = 'green')
+plot(fitted(model), col = 'red',  main = "Plotting Revenue With Model 1", ylab = "Revenue", xlab = "Years")
 lines(recRev, pch = 3)
 
-model <- model2
 
+model <- model1
+
+plot(res1, main = "Standardized Residuals of Model 1", ylab = "Residuals")
+acf(res1)
+hist(res1)
 ```
 
 ```{r}
 num = length(actual)
-res = plot(model,n.ahead=num, n1 = c(2016,2), col = "red", main = "ARIMA(,,)x(,,)_12 Forecast", ylab ="Revenue", xlab = "Year")
+res = plot(model,n.ahead=num, n1 = c(2016,2), col = "red", main = "ARIMA(0,1,1)x(1,1,1)_12 Forecast", ylab ="Revenue", xlab = "Year")
 lines(actual,pch=3) 
 abline(h=coef(model)[names(coef(model))=='intercept'])
 ```
