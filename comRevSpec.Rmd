@@ -41,12 +41,12 @@ stationary_test <- function(series){
 ```
 
 ```{r}
-totalRev <- ts(data$Tot_Revenue/1000000,start=c(1990,1),frequency=12)
-plot_months(totalRev, main = "Total Revenue (1990-2020)", ylab = "Revenue (Millions)", xlab = "Year")
+cRev <- ts(data$C_Revenue/1000000,start=c(1990,1),frequency=12)
+plot_months(cRev, main = "Total Revenue (1990-2020)", ylab = "Revenue (Millions)", xlab = "Year")
 ```
 
 ```{r}
-totalRev2 = window(totalRev, start = c(2008, 1))
+totalRev2 = window(cRev, start = c(2008, 1))
 
 
 # hold actual data for later predictions
@@ -59,25 +59,22 @@ plot_months(totalRev2, main = "Total Revenue (2008-2019)", ylab = "Revenue (Mill
 ```
 
 ```{r}
-acf(totalRev2, main = "ACF of Total Revenue (2008-2019)")
+acf(totalRev2, main = "ACF of Total Revenue (2008-2020)")
 pacf(totalRev2)
 
 ```
 
 
 ```{r}
-bc = BoxCox.ar(totalRev2)
+# bc = BoxCox.ar(totalRev2)
 ```
 
 
 ```{r}
-# recRev = totalRev2^(-1)
-# actual = actual^(-1)
+recRev = totalRev2^(1)
+actual = actual^(1)
 
-recRev = log(totalRev2)
-actual = log(actual)
-
-plot_months(recRev, main = "Transformed Revenue (2008-2019)", ylab = "Log Revenue", xlab = "Year")
+plot_months(recRev, main = "Transformed Revenue (2008-2020)", ylab = "Revenue", xlab = "Year")
 acf(recRev)
 pacf(recRev)
 
@@ -87,17 +84,14 @@ pacf(recRev)
 
 ```{r}
 diffRev = diff(recRev)
-plot_months(diffRev, main = "First Difference of Log Revenue", ylab = "First Difference of Log Revenue", xlab = "Year")
-acf(diffRev, main = "First Difference ACF")
-#acf(diff(diffRev), main = "Second Diff ACF")
-
+plot_months(diffRev, main = "First Difference of Transformed Revenue", ylab = "First Difference of Transformed Revenue", xlab = "Year")
 ```
 
 
 ```{r}
 seasDiffRev = diff(diffRev, lag = 12)
-plot_months(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference of Log Revenue", ylab = "First Non-Seasonal and Seasonal Difference", xlab = "Year")
-acf(seasDiffRev, main = "ACF")
+plot_months(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference of Transformed Revenue", ylab = "First Non-Seasonal and Seasonal Difference", xlab = "Year")
+acf(seasDiffRev)
 pacf(seasDiffRev)
 ```
 
@@ -105,18 +99,15 @@ pacf(seasDiffRev)
 ```{r}
 eacf(seasDiffRev)
 plot(armasubsets(seasDiffRev, nar = 12, nma = 12))
-plot(armasubsets(diff(diffRev), nar = 12, nma = 12))
-
 ```
 
 
 ```{r}
-model1 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(0,1,2),period= 12))
-model2 = arima(recRev, order = c(0,1,2), seasonal = list(order=c(0,1,1),period= 12))
+model1 = arima(recRev, order = c(2,1,0), seasonal = list(order=c(0,1,1),period= 12))
+model2 = arima(recRev, order = c(2,1,1), seasonal = list(order=c(0,1,1),period= 12))
 
-model3 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(0,1,2),period= 12))
-model4 = arima(recRev, order = c(0,1,2), seasonal = list(order=c(1,1,1),period= 12))
-# model5 = arima(recRev, order = c(0,2,1), seasonal = list(order=c(1,1,1),period= 12))
+model3 = arima(recRev, order = c(2,1,0), seasonal = list(order=c(1,1,1),period= 12))
+model4 = arima(recRev, order = c(2,1,1), seasonal = list(order=c(1,1,1),period= 12))
 
 ```
 
@@ -133,7 +124,7 @@ model4
 ```{r}
 # library(forecast)
 # model4 <-auto.arima(recRev)
-# model4 = arima(recRev, order = c(1,0,0), seasonal = list(order=c(2,1,1),period= 12))
+# model4 = arima(recRev, order = c(2,0,0), seasonal = list(order=c(0,1,1),period= 12))
 # model4
 ```
 
@@ -143,8 +134,6 @@ res1 = rstandard(model1)
 res2 = rstandard(model2)
 res3 = rstandard(model3)
 res4 = rstandard(model4)
-# res5 = rstandard(model4)
-
 ```
 
 
@@ -188,26 +177,26 @@ LB.test(model4)
 
 ```{r}
 
-#plot(fitted(model5), col = 'red')
-#lines(recRev, pch = 3)
+model = arima(recRev, order = c(0,1,0), seasonal = list(order=c(0,1,1),period= 12))
+plot(fitted(model2), col = 'red')
+lines(recRev, pch = 3)
 plot(fitted(model4), col = 'green')
 lines(recRev, pch = 3)
 
-model <- model4
-model
+model <- model2
 
 ```
 
 ```{r}
 num = length(actual)
-res = plot(model,n.ahead=num, n1 = c(2016,2), col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Log Revenue", xlab = "Year")
+res = plot(model,n.ahead=num, n1 = c(2016,2), col = "red", main = "ARIMA(,,)x(,,)_12 Forecast", ylab ="Revenue", xlab = "Year")
 lines(actual,pch=3) 
 abline(h=coef(model)[names(coef(model))=='intercept'])
 ```
 
 ```{r}
 num = length(actual)
-res = plot(model,n.ahead=36, col = "red", main = "Beyond 2020", ylab = "Log Revenue", xlab = "Year")
+res = plot(model,n.ahead=36, col = "red", main = "Beyond 2020", ylab = "Revenue", xlab = "Year")
 abline(h=coef(model)[names(coef(model))=='intercept'])
 ```
 
