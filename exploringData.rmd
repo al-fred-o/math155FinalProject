@@ -107,7 +107,8 @@ lines(iSales)
 ```
 
 ```{r}
-plot(cbind(totalMA,rMA,cMA, iMA),plot.type='single',col=4:1,lwd=2, ylab="sales")
+plot(cbind(totalMA/1e6,rMA/1e6,cMA/1e6, iMA/1e6),plot.type='single',col=4:1,lwd=2, ylab="sales (Millions of $)", main = "Electricity sales (12 month MA) by Sector")
+legend(x = 'topleft', legend = c('Total', 'Residential', 'Commercial', 'Industrial'), col = 4:1, lwd = 2)
 # green is residential
 # red is c
 # black is industrial
