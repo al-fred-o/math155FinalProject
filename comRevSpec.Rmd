@@ -46,32 +46,32 @@ plot_months(cRev, main = "Commercial Revenue (1990-2020)", ylab = "Revenue (Mill
 ```
 
 ```{r}
-totalRev2 = window(cRev, start = c(2008, 1))
+cRev2 = window(cRev, start = c(2008, 1))
 
 
 # hold actual data for later predictions
-actual = window(totalRev2, start = c(2019,1))
-totalRev2 = window(totalRev2, start = c(2008,2), end = c(2019,1))
+actual = window(cRev2, start = c(2019,1))
+cRev2 = window(cRev2, start = c(2008,2), end = c(2019,1))
 
-plot_months(totalRev2, main = "Commercial Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
+plot_months(cRev2, main = "Commercial Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
 
 
 ```
 
 ```{r}
-acf(totalRev2, main = "ACF of Total Revenue (2008-2020)")
-pacf(totalRev2)
+acf(cRev2, main = "ACF of Total Revenue (2008-2020)")
+pacf(cRev2)
 
 ```
 
 
 ```{r}
-# bc = BoxCox.ar(totalRev2)
+bc = BoxCox.ar(cRev2)
 ```
 
 
 ```{r}
-recRev = totalRev2^(1)
+recRev = cRev2^(1)
 actual = actual^(1)
 
 plot_months(recRev, main = "Transformed Revenue (2008-2020)", ylab = "Revenue", xlab = "Year")
