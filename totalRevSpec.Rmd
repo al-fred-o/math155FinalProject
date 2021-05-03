@@ -1,0 +1,174 @@
+---
+title: "Model Specification"
+author: "Steven Litvack-Winkler"
+date: "5/1/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=8, fig.height=5) 
+
+library(TSA)
+library(readr)
+```
+
+## Importing/Processing Data
+
+```{r}
+data <- read_csv("sales_revenue_clean.csv")
+```
+## Custom functions
+
+#### Plot function
+```{r}
+plot_months <- function(series,  mainLab = "title") {
+  Month=c('J','F','M','A','M','J','J','A','S','O','N','D')
+  
+  plot(series, main = mainLab)
+  points(series,pch=Month)
+}
+```
+
+#### Series diagnostics
+```{r}
+stationary_test <- function(series){
+  acf(series)
+  pacf(series)
+  print(runs(series))
+  print(shapiro.test(series))
+}
+```
+
+```{r}
+totalRev <- ts(data$Tot_Revenue,start=c(1990,1),frequency=12)
+plot_months(totalRev)
+```
+
+```{r}
+totalRev2 = window(totalRev, start = c(2008, 1))
+plot_months(totalRev2)
+```
+
+```{r}
+acf(totalRev2)
+pacf(totalRev2)
+
+```
+
+
+```{r}
+# bc = BoxCox.ar(totalRev2)
+```
+
+
+```{r}
+recRev = totalRev2^(-1)
+
+plot(recRev)
+acf(recRev)
+pacf(recRev)
+
+```
+
+
+
+```{r}
+diffRev = diff(recRev)
+plot(diffRev)
+```
+
+
+```{r}
+seasDiffRev = diff(diffRev, lag = 12)
+plot(seasDiffRev)
+acf(seasDiffRev)
+pacf(seasDiffRev)
+```
+
+
+```{r}
+eacf(seasDiffRev)
+plot(armasubsets(seasDiffRev, nar = 12, nma = 12))
+```
+
+
+```{r}
+model1 = arima(seasDiffRev, order = c(0,1,0), seasonal = list(order=c(0,1,2),period= 12))
+model2 = arima(seasDiffRev, order = c(1,1,0), seasonal = list(order=c(0,1,2),period= 12))
+model3 = arima(seasDiffRev, order = c(1,1,0), seasonal = list(order=c(0,1,1),period= 12))
+model5 = arima(seasDiffRev, order = c(2,1,3), seasonal = list(order=c(0,1,2),period= 12))
+```
+
+
+```{r}
+model1
+model2
+model3
+```
+
+
+
+```{r}
+library(forecast)
+model4 <-auto.arima(recRev)
+model4
+```
+
+
+```{r}
+res1 = rstandard(model1) 
+res2 = rstandard(model2)
+res3 = rstandard(model3)
+res4 = rstandard(model4)
+res5 = rstandard(model5)
+```
+
+
+
+```{r}
+runs(res1)
+hist(res1)
+qqnorm(res1)
+qqline(res1)
+shapiro.test(res1)
+LB.test(model1)
+```
+
+```{r}
+runs(res2)
+hist(res2)
+qqnorm(res2)
+qqline(res2)
+shapiro.test(res2)
+LB.test(model2)
+```
+
+
+```{r}
+runs(res3)
+hist(res3)
+qqnorm(res3)
+qqline(res3)
+shapiro.test(res3)
+LB.test(model3)
+```
+
+```{r}
+runs(res4)
+hist(res4)
+qqnorm(res4)
+qqline(res4)
+shapiro.test(res4)
+LB.test(model4)
+```
+
+```{r}
+runs(res5)
+hist(res5)
+qqnorm(res5)
+qqline(res5)
+shapiro.test(res5)
+LB.test(model5)
+```
+
