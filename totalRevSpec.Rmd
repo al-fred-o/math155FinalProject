@@ -51,7 +51,7 @@ totalRev2 = window(totalRev, start = c(2008, 1))
 
 # hold actual data for later predictions
 actual = window(totalRev2, start = c(2019,1))
-totalRev2 = window(totalRev2, start = c(2008,2), end = c(2019,1))
+totalRev2 = window(totalRev2, start = c(2008,1), end = c(2019,1))
 
 plot_months(totalRev2, main = "Total Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
 
