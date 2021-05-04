@@ -18,6 +18,22 @@ library(readr)
 data <- read_csv("sales_revenue_clean.csv")
 ```
 
+```{r}
+save_plot = function(series, name, months = FALSE, plt_width = 640){
+  Month=c('J','F','M','A','M','J','J','A','S','O','N','D')
+  
+  path = paste('plots', name, sep = '/')
+  png(paste(path, '.png', sep = ''), width = plt_width)
+  
+  plot(series)
+  if (months){
+    points(series,pch=Month)
+  }
+  dev.off()
+}
+```
+
+
 
 ```{r}
 data$Tot_Sale
@@ -89,19 +105,19 @@ points(totalRev,pch=Month)
 ```
 
 ```{r}
-totalMA = filter(totalSales,rep(1,13)/13,sides=2) # 1 year MA
+totalMA = filter(totalRev,rep(1,13)/13,sides=2) # 1 year MA
 plot(cbind(totalMA),plot.type='single',col=4:1,lwd=2, ylab="flow", main = "Total MA" )
 lines(totalSales)
 
-rMA = filter(rSales,rep(1,13)/13,sides=2) # 1 year MA
+rMA = filter(rRev,rep(1,13)/13,sides=2) # 1 year MA
 plot(cbind(rMA),plot.type='single',col=4:1,lwd=2, ylab="flow", main = "Residential MA")
 lines(rSales)
 
-cMA = filter(cSales,rep(1,13)/13,sides=2) # 1 year MA
+cMA = filter(cRev,rep(1,13)/13,sides=2) # 1 year MA
 plot(cbind(cMA),plot.type='single',col=4:1,lwd=2, ylab="flow", main = "Construction MA")
 lines(cSales)
 
-iMA = filter(iSales,rep(1,13)/13,sides=2) # 1 year MA
+iMA = filter(iRev,rep(1,13)/13,sides=2) # 1 year MA
 plot(cbind(iMA),plot.type='single',col=4:1,lwd=2, ylab="flow", main = "Industrial MA")
 lines(iSales)
 ```
