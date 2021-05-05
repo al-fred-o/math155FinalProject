@@ -1,33 +1,141 @@
 ---
 title: "Math 155 Final Report"
-author: 
-- name: Steven Litvack-Winkler
-- name: Alfredo Gomez
-date: "`r format(Sys.time(), '%B %d, %Y')`"
-abstract: "We describe a time series model for the total electricity consumption of the United States from 2008 through 2018. We found that that an $\ARIMA(0,1,1) \times \ARIMA(1,1,1)_{12}$ model best fits the data and passes the runs, Shapiro-Wilk, and Box-Ljung tests.Applying the forecast of the model to 2019 through the present, we see that the actual data falls within the 95th-percent confidence band of the forecast. We take similar steps to model the electricity consumption of the commercial sector over the same time period and reach a similar $\ARIMA(0,1,1) \times \ARIMA(1,1,1)_{12}$ process. However the model no longer passes the Shapiro-Wilk test and the actual electricity usage in March and April 2020 falls outside of the models forecast."
+author: Alfredo Gomez and Alfredo Gomez
+
+date: "May 5, 2021"
 output: pdf_document
+header-includes:
+  \DeclareMathOperator{\ARIMA}{ARIMA}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center")
+
+library(ggplot2)
+library(TSA)
+library(readr)
 ```
 
-## R Markdown
+<!-- Downloading dataset -->
+```{r, echo=FALSE}
+data <- read_csv("sales_revenue_clean.csv")
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+save_plot = function(series, name, months = FALSE, plt_width = 640){
+  Month=c('J','F','M','A','M','J','J','A','S','O','N','D')
+  
+  path = paste('plots', name, sep = '/')
+  png(paste(path, '.png', sep = ''), width = plt_width)
+  
+  plot(series)
+  if (months){
+    points(series,pch=Month)
+  }
+  dev.off()
+}
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+totalSales <- ts(data$Tot_Sales,start=c(1990,1),frequency=12)
+totalRev <- ts(data$Tot_Revenue,start=c(1990,1),frequency=12)
+totalPrice <- ts(data$Tot_Price,start=c(1990,1),frequency=12)
 
-```{r cars}
-summary(cars)
+
+rSales <- ts(data$R_Sales,start=c(1990,1),frequency=12)
+rRev <- ts(data$R_Revenue,start=c(1990,1),frequency=12)
+rPrice <- ts(data$R_Price,start=c(1990,1),frequency=12)
+
+cSales <- ts(data$C_Sales,start=c(1990,1),frequency=12)
+cRev <- ts(data$C_Revenue,start=c(1990,1),frequency=12)
+cPrice <- ts(data$C_Price,start=c(1990,1),frequency=12)
+
+iSales <- ts(data$I_Sales,start=c(1990,1),frequency=12)
+iRev <- ts(data$I_Revenue,start=c(1990,1),frequency=12)
+iPrice <- ts(data$I_Price,start=c(1990,1),frequency=12)
+
+tSales <- ts(data$T_Sales,start=c(1990,1),frequency=12)
+tRev <- ts(data$T_Revenue,start=c(1990,1),frequency=12)
+tPrice <- ts(data$T_Price,start=c(1990,1),frequency=12)
+
+oSales <- ts(data$O_Sales,start=c(1990,1),frequency=12)
+oRev <- ts(data$O_Revenue,start=c(1990,1),frequency=12)
+oPrice <- ts(data$O_Price,start=c(1990,1),frequency=12)
 ```
 
-## Including Plots
+\begin{abstract}
+We describe a time series model for the total electricity consumption of the United States from 2008 through 2018.
+We found that that an $\ARIMA(0,1,1) \times \ARIMA(1,1,1)_{12}$ model best fits the data and passes the runs, Shapiro-Wilk, and Box-Ljung tests. 
+Applying the forecast of the model to 2019 through the present, we see that the actual data falls within the 95th-percent confidence band of the forecast.
+We take similar steps to model the electricity consumption of the commercial sector over the same time period and reach a similar $\ARIMA(0,1,1) \times \ARIMA(1,1,1)_{12}$ process.
+However the model no longer passes the Shapiro-Wilk test and the actual electricity usage in March and April 2020 falls outside of the models forecast.
+\end{abstract}
 
-You can also embed plots, for example:
+\section{Introduction}
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+\subsection{Dataset}
+ 
+Our dataset includes the electricity consumption from 1990 to the present.\footnote{The dataset is maintained by the US Energy Information Administration and freely available at \url{https://www.eia.gov/electricity/data.php} as form EIA-861M.}
+The data is broken down by state (including DC and Puerto Rico) and energy sector.
+The energy sectors are residential, commercial, industrial and transportation/other (the other sector is recorded from 1990 - 2002 and the transportation sector is recorded from 2003 to the present).
+The dataset measures the electricity consumption in four different ways: revenue in thousands of dollars, sales in MWh, price in cents/kWh, and number of customers (the number of customers is present in the dataset only after 2007).
+
+
+\subsection{Data Exploration}
+Graphs of the revenue, price, and sales of total electricity in the US are given below.
+```{r, figures-side, fig.show='hold', out.width="32%"}
+Month=c('J','F','M','A','M','J','J','A','S','O','N','D')
+
+plot(totalSales, main = "Total Sales")
+points(totalSales,pch=Month)
+
+plot(totalPrice, main = "Total Price")
+points(totalPrice,pch=Month)
+
+plot(totalRev, main = "Total Revenue")
+points(totalRev,pch=Month)
+```
+Note that all three graphs exhibit seasonal patterns but also long term trends.
+In particular, each decade of the data seems to behave differently.
+The 90s are characterized by growing usage and a cheap price of electricity.
+The 2000s are characterized by slower growth in the use of electricity and rising prices.
+Finally the 2010s are characterized by flat electricity usage and slowly rising prices.
+Another import trend in the sales and revenue graphs is a heteroscedastic increase in variance.
+Since we are interested in modeling the total revenue with predictive power, heteroscedasticity is a problem.
+While this can sometimes be addressed via power transformations the easiest thing in our case is to chop the dataset. We use only the data from 2008 onwards which we visually observed to be where the price of electricity began to stabilize.
+
+We can also see the electricity use breakdown by sector.
+To make the trends clearer over time, we show a 12 month moving average.
+Note that the residential, commercial, and industrial sectors together is about 97% of the total revenue before 2003 and more than 97% of the total revenue after 2003, the remainder falls in the other or transportation sector, not shown on this chart.
+```{r}
+totalMA = filter(totalRev,rep(1,13)/13,sides=2) # 1 year MA
+rMA = filter(rRev,rep(1,13)/13,sides=2) # 1 year MA
+cMA = filter(cRev,rep(1,13)/13,sides=2) # 1 year MA
+iMA = filter(iRev,rep(1,13)/13,sides=2) # 1 year MA
+
+plot(cbind(totalMA/1e6,rMA/1e6,cMA/1e6, iMA/1e6),plot.type='single',col=4:1,lwd=2, ylab="sales (Millions of $)", main = "Electricity sales (12 month MA) by Sector")
+legend(x = 'topleft', legend = c('Total', 'Residential', 'Commercial', 'Industrial'), col = 4:1, lwd = 2)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Interestingly, the 3 sectors all show their own trends. 
+The industrial sector has little seasonal variation but is strongly impacted by the business cycle with revenues dropping significantly in great recession of 2008 - 2009 and during the lockdowns from COVID-19.
+
+\section{Total Revenue Data}
+The first series we will examine is the total revenue time series.
+
+\subsection{Model Specification}
+
+\subsection{Model Diagnostics}
+
+\subsection{Forecasting}
+
+\section{Commercial Revenue Data}
+The first series we will examine is the commercial revenue time series.
+
+\subsection{Model Specification}
+
+\subsection{Model Diagnostics}
+
+\subsection{Forecasting}
+
+\section{Discussion}
+
+\section{Conclusion}
+
+\section{References}
