@@ -341,6 +341,15 @@ plot(armasubsets(cRev_diff11, nar = 12, nma = 12))
 
 Continuing with the seasonally and non-seasonally first differenced data, the top 3 models all suggest a seasonal autoregressive term and a non-seasonal moving average term.
 The top 2 models also include a moving average term of lag 9, although we choose to ignore this as it doesn't appear in the autocorrelation plot and is not parsimonious with a periodicity of 12 that shows up elsewhere in the data.
+
+```{r, echo = TRUE}
+eacf(cRev_diff01)
+```
+
+\begin{figure}
+\includegraphics[width = .4\linewidth]{plots/sectors.png}
+\end{figure}
+
 \subsection{Model Diagnostics}
 
 \subsection{Forecasting}
