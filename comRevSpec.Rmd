@@ -104,6 +104,7 @@ pacf(seasDiffRev)
 ```{r}
 eacf(seasDiffRev, ar.max = 12)
 plot(armasubsets(seasDiffRev, nar = 12, nma = 12))
+plot(armasubsets(diff(cRev2, lag = 12), nar = 12, nma = 12))
 
 plot(armasubsets(recRev, nar = 12, nma = 12))
 plot(armasubsets(diffRev, nar = 12, nma = 12))
@@ -210,6 +211,14 @@ abline(h=coef(model)[names(coef(model))=='intercept'])
 num = length(actual)
 res = plot(model,n.ahead=36, col = "red", main = "Beyond 2020", ylab = "Revenue", xlab = "Year")
 abline(h=coef(model)[names(coef(model))=='intercept'])
+```
+
+Try and build regression matrix with months, also time.
+```{r}
+months_reg = vector(length = 12*length(cRev2))
+for (i in 1:12){
+  print(i)
+}
 ```
 
 
