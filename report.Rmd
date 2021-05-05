@@ -165,6 +165,16 @@ We believe that this is due to weather effects, and these were likely a cool sum
 acf_pacf(cRev2, "Commercial Revenue")
 ```
 
+Looking at the autocorrelation function, we can confirm that the data shows strong seasonality.
+The partial autocorrelation shows two significant correlations at lags 1 and 2 suggesting an AR(2) process but there are several additional spikes, most notably at lags 6 and 9.
+
+```{r}
+bc = BoxCox.ar(cRev2, lambda = seq(-0.5, 1.5, 0.1))
+```
+
+We considered taking a transformation but a Box-Cox plot reveals that none is necessary as $\lambda = 1$ (indicating the identity transformation) as within the 95% confidence interval of the plot.
+
+Next we explore, the impact of differencing our data.
 
 \subsection{Model Specification}
 
