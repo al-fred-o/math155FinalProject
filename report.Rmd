@@ -6,6 +6,7 @@ date: "May 5, 2021"
 output: pdf_document
 header-includes:
   \DeclareMathOperator{\ARIMA}{ARIMA}
+  \usepackage{float}
 ---
 
 ```{r setup, include=FALSE}
@@ -318,28 +319,28 @@ We'll use this as model 1.
 Next we consider the series with both a seasonal and non difference applied.
 
 ```{r, out.width="49%"}
-acf_pacf(cRev_diff11, name = "Seasonal Difference of Commercial Revenue")
+acf_pacf(cRev_diff11, name = "Seasonal and Non-Seasonal Difference of Commercial Revenue")
 ```
 
 This set of graphs is more difficult to interpret although both the ACF and the PACF have spikes at lag 12.
 The graphs also have spikes at lag 1 although they are both close to the significance threshold.
 Since there is no clear model suggested by the ACF and PACF we now seek additonal candidate models using the armasubsets tool in R.
 
-```{r, out.width = "75%"}
+```{r, out.width = "75%", fig.cap = "Arma subsets of Seasonally Differenced Commercial Revenue", fig.pos = "H"}
 armas = armasubsets(cRev_diff01, nar = 12, nma = 12)
 plot(armas)
 ```
 
-The top 2 row of the plots suggest two further strong candidate models (models 2 and 3), an $\ARIMA(2,0,0) \times (1,1,0)_{12}$ and $\ARIMA(1,0,0) \times (0,1,1)_{12}$.
+Beginning with the seasonally differenced data, the top 2 row of the plots suggest two further strong candidate models (models 2 and 3), an $\ARIMA(2,0,0) \times (1,1,0)_{12}$ and $\ARIMA(1,0,0) \times (0,1,1)_{12}$.
 Note that model 3 is similar to the model 1 we guessed at from the ACF and PACF plots but also has a seasonal MA term.
 We can also see that our model 1 shows up as the second to last row on the armasubsets plot, so we can infer that it may be a substantially worse model.
-Next we
 
-```{r, out.width = "75%"}
+```{r, out.width = "75%", fig.cap = "Arma subsets of Seasonally and Non-Seasonally Differenced Commercial Revenue", fig.pos = "H"}
 plot(armasubsets(cRev_diff11, nar = 12, nma = 12))
 ```
 
-The top 3 models suggested by
+Continuing with the seasonally and non-seasonally first differenced data, the top 3 models all suggest a seasonal autoregressive term and a non-seasonal moving average term.
+The top 2 models also include a moving average term of lag 9, although we choose to ignore this as it doesn't appear in the autocorrelation plot and is not parsimonious with a periodicity of 12 that shows up elsewhere in the data.
 \subsection{Model Diagnostics}
 
 \subsection{Forecasting}
