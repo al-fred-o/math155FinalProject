@@ -55,6 +55,13 @@ plot_months <- function(series,  main = "title", ylab = "value", xlab = "Time") 
   points(series,pch=Month)
 }
   
+acf_pacf <- function(series, name = "Series"){
+  acf. = acf(series, plot = FALSE)
+  plot(acf., main = paste(name, "ACF"))
+  pacf. = pacf(series, plot = FALSE)
+  plot(pacf., main = paste(name, "PACF"))
+}
+
 stationary_test <- function(series){
   acf(series)
   pacf(series)
@@ -84,7 +91,7 @@ The dataset measures the electricity consumption in four different ways: revenue
 
 \subsection{Data Exploration}
 Graphs of the revenue, price, and sales of total electricity in the US are given below.
-```{r, figures-side, fig.show='hold', out.width="32%"}
+```{r, fig.show='hold', out.width="32%"}
 Month=c('J','F','M','A','M','J','J','A','S','O','N','D')
 
 plot(totalSales, main = "Total Sales")
@@ -132,8 +139,32 @@ The first series we will examine is the total revenue time series.
 
 \section{Commercial Revenue Data}
 The second series we will examine is the commercial revenue time series.
-As in the total revenue series, we remove the data from the 1990s and 2000s as the underlying electricity economy was growing much faster then compared to now and hold out the 2019 and 2020 data for forecasting.
-Therefore, we model on data from January 2009 to December 2018, a total of 120 data points.
+```{r, fig.show='hold', out.width="49%"}
+cRev <- ts(data$C_Revenue/1000000,start=c(1990,1),frequency=12)
+plot_months(cRev, main = "Commercial Revenue (1990-2020)", ylab = "Revenue (Millions)", xlab = "Year")
+
+cRev2 = window(cRev, start = c(2008, 1))
+
+# hold actual data for later predictions
+actual = window(cRev2, start = c(2019,1))
+cRev2 = window(cRev2, start = c(2008,1), end = c(2019,1))
+
+plot_months(cRev2, main = "Commercial Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
+```
+
+As in the total revenue series, we remove the data from the 1990s and 2000s as the underlying electricity economy was growing much faster then compared to now.
+We also hold out the 2019 and 2020 data for forecasting.
+Therefore, we model on data from January 2008 to December 2018, a total of 132 data points.
+Another similarity with the total revenue series is that the data has a strong seasonal component.
+
+Looking at the plots, we also see some strong outlier seasons. 
+For example the 2009 summer showed unusually low revenue relative to other summers while the 2014 winter was unusually high.
+We believe that this is due to weather effects, and these were likely a cool summer and warm winter respectively.\footnote{A U.S. Energy Information Administration post, explaining the seasonal variability in more detail can be found at \url{https://www.eia.gov/todayinenergy/detail.php?id=10211}}
+
+```{r, fig.show='hold', out.width="49%"}
+acf_pacf(cRev2, "Commercial Revenue")
+```
+
 
 \subsection{Model Specification}
 
