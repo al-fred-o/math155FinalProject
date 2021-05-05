@@ -9,7 +9,7 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center")
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center", fig.show = "hold")
 
 library(ggplot2)
 library(TSA)
@@ -284,16 +284,62 @@ acf_pacf(cRev2, "Commercial Revenue")
 Looking at the autocorrelation function, we can confirm that the data shows strong seasonality.
 The partial autocorrelation shows two significant correlations at lags 1 and 2 suggesting an AR(2) process but there are several additional spikes, most notably at lags 6 and 9.
 
-```{r}
+```{r, out.width= "65%"}
 bc = BoxCox.ar(cRev2, lambda = seq(-0.5, 1.5, 0.1))
 ```
 
 We considered taking a transformation but a Box-Cox plot reveals that none is necessary as $\lambda = 1$ (indicating the identity transformation) as within the 95% confidence interval of the plot.
 
 Next we explore, the impact of differencing our data.
+Since there are strong seasonal affects these need to be removed either through a seasonal regressor or a seasonal difference.
+```{r, fig.show = "hold", out.width="32%"}
+cRev_diff01 = diff(cRev2, lag = 12)
+cRev_diff10 = diff(cRev2)
+cRev_diff11 = diff(cRev_diff01)
+plot(cRev_diff10, main = "First Difference", ylab = "")
+plot(cRev_diff01, main = "Seasonal First Difference", ylab = "")
+plot(cRev_diff11, main = "First Difference and Seasonal First Difference", ylab = "")
+```
+
+Indeed, the first difference alone is clearly leaves the seasonal patterns intact.
+The first seasonal difference and the combined first seasonal and non-seasonal difference both succeed in removing the seasonal patterns so we we will proceed to consider ARIMA models with one seasonal difference and either zero or one non-seasonal differences.
 
 \subsection{Model Specification}
 
+To better understand the correlations in our series we recompute the ACF and PACF of our differenced data.
+
+```{r, out.width="49%"}
+acf_pacf(cRev_diff01, name = "Seasonal Difference of Commercial Revenue")
+```
+
+The partial autocorrelation function has a large spike at lag 1 that strongly suggests including an AR(1) term in the model.
+Since the autocorrelation function looks somewhat like a decaying exponential that an AR(1) process produces we can consider modeling the series as an $\ARIMA(1,0,0) \times (0,1,0)_{12}$ process.
+We'll use this as model 1.
+Next we consider the series with both a seasonal and non difference applied.
+
+```{r, out.width="49%"}
+acf_pacf(cRev_diff11, name = "Seasonal Difference of Commercial Revenue")
+```
+
+This set of graphs is more difficult to interpret although both the ACF and the PACF have spikes at lag 12.
+The graphs also have spikes at lag 1 although they are both close to the significance threshold.
+Since there is no clear model suggested by the ACF and PACF we now seek additonal candidate models using the armasubsets tool in R.
+
+```{r, out.width = "75%"}
+armas = armasubsets(cRev_diff01, nar = 12, nma = 12)
+plot(armas)
+```
+
+The top 2 row of the plots suggest two further strong candidate models (models 2 and 3), an $\ARIMA(2,0,0) \times (1,1,0)_{12}$ and $\ARIMA(1,0,0) \times (0,1,1)_{12}$.
+Note that model 3 is similar to the model 1 we guessed at from the ACF and PACF plots but also has a seasonal MA term.
+We can also see that our model 1 shows up as the second to last row on the armasubsets plot, so we can infer that it may be a substantially worse model.
+Next we
+
+```{r, out.width = "75%"}
+plot(armasubsets(cRev_diff11, nar = 12, nma = 12))
+```
+
+The top 3 models suggested by
 \subsection{Model Diagnostics}
 
 \subsection{Forecasting}
