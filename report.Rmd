@@ -388,7 +388,30 @@ However, model 3 has a significantly larger p-value than the first two indicatin
 Model 4 does not pass the test, and a more detailed look at the ouput shows that it has only 54 observed runs compared to 67.3 expected runs.
 This indicates that the residuals from model 4 still are positively correlated.
 
-Moving
+Moving on to the Wilkes-Shapiro test, this tests the models residuals for normality.
+The p-values of the 4 models are 
+```{r}
+shapiro_tests = vector(mode = "numeric", length = 4)
+shapiro_tests[1] = shapiro.test(cRev_model1$residuals)$p.value
+shapiro_tests[2] = shapiro.test(cRev_model2$residuals)$p.value
+shapiro_tests[3] = shapiro.test(cRev_model3$residuals)$p.value
+shapiro_tests[4] = shapiro.test(cRev_model4$residuals)$p.value
+print(shapiro_tests)
+```
+In fact, we see that all of the models fail the Shapiro-Wilk test so this won't help us much in deciding which is best.
+
+We can consider the Ljung-Box test which also checks if the correlations between the residuals are significant.
+We will use a lag of 15 since we models that don't capture seasonal effects correctly on this dataset may exhibit significant autocorrelations at lags of 13 - 15.
+The p-values from the Ljung-Box test are
+```{r}
+LB_tests = vector(mode = "numeric", length = 4)
+LB_tests[1] = LB.test(cRev_model1)$p.value
+LB_tests[2] = LB.test(cRev_model2)$p.value
+LB_tests[3] = LB.test(cRev_model3)$p.value
+LB_tests[4] = LB.test(cRev_model4)$p.value
+print(LB_tests)
+```
+
 \subsection{Forecasting}
 
 \section{Discussion}
