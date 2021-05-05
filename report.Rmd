@@ -188,7 +188,7 @@ acf(diff(diffRev), main = "Second Diff ACF")
 
 Visually, both of approaches were able to detrend our data and this is reflected in the ACF's by the autocorrelations being near or within our margins for most of the lags. However upon close inspection, it appears that there are a few lags resulted in higher autocorrelations within the second difference ACF, implying that this may be over-differencing the data. Hence we will proceed any further analysis using the first difference.
 
-Moreover, we still observe a significant autocorrelation spike at lag 12. In order to account for this, we perform a seasonal difference to our first difference.
+Moreover, we still observe a significant autocorrelation spike at lag 12 after the first difference. In order to account for this, we perform a seasonal difference to our first difference.
 
 ```{r, fig.show='hold', out.width="49%"}
 seasDiffRev = diff(diffRev, lag = 12)
@@ -197,17 +197,18 @@ acf(seasDiffRev, main = "ACF")
 pacf(seasDiffRev)
 ```
 
-Now we see that that any seasonality has been largely account for. To finally determine our candidate models, we run ARMA-Subsets and EACF for the first non-seasonal and seasonal difference of revenue. 
+Now we see that that any seasonality has been largely account for. To finally determine our candidate models, we run ARMA-Subsets and EACF for the first non-seasonal and seasonal difference of revenue. Firstly, the ARMA subset for the first non-seasonal and seasonal difference suggested a model with no non-seasonal AR terms, but possibly a seasonal AR term. Additionally it suggests a seasonal MA term in addition to a few non-seasonal AR terms. Thus some of the seasonal components were $(1,1,2)_{12}$, $(1,1,0)_{12}$ and $(0,1,2)_{12}$. Looking at the EACF, it seemed fairly possible that our model could contain up to two non-seasonal MA terms and at most one AR component depending on which values we count as false positives within the plot. 
 
 ```{r, fig.show='hold', out.width="49%"}
 eacf(seasDiffRev, ar.max = 12)
 plot(armasubsets(diffRev, nar = 12, nma = 12))
 ```
 
+Using this information we reduced our search to the following models: $ARIMA(0,1,1)\times(0,1,2)_{12}$, $ARIMA(0,1,0)\times(0,1,1)_{12}$, $ARIMA(0,1,1)\times(0,1,2)_{12}$, $ARIMA(0,1,2)\times(1,1,1)_{12}$.
 
 \subsection{Model Diagnostics}
 
-Moving forward with the four models previously identfied, we will train them on our data and evaluate their performance using a series of tests to assess randomness, normality and independnce.
+Moving forward with the four models previously identified, we will train them on our data and evaluate their performance using a series of tests to assess randomness, normality and independence.
 
 ```{r, fig.show='hold', out.width="49%"}
 model1 = arima(logRev, order = c(0,1,1), seasonal = list(order=c(0,1,2),period= 12))
@@ -220,16 +221,13 @@ model4 = arima(logRev, order = c(0,1,2), seasonal = list(order=c(1,1,1),period= 
 model4
 ```
 
+From the models themselves it is worth noting that Models 1, 3, and 4 had similar scores for AIC, whereas Model 2 appeared to score a few points lower. Additionally most, if not all, coefficients appear to be statistically significant since zero is more that a standard error away from the derived value.
+
 TODO: Add table for of performance
 
-Both Model 2 and Model 4 passed all tests. However, we went with Model since it had a higher p-value under the Shapiro Test and due to its lower AIC score.
+From the summary table of diagnostics, we note that Model 1 and Model 3 both fail the runs the test, thus we must reject the hypothesis that the residuals are independent. However for examples, there is insufficient evidence to reject the hypotheses that the residuals are normally distributed. Additionally, the Box-Ljung test fails to reject the hypotheses that the models do not show lack of fit. In the end, the lack of independence within the residuals was sufficient for us to reject these two models and more closely consider the remaining.
 
-
-\subsection{Forecasting}
-
-To forecast future observations, we use the forecast and predict functions to forecast our Model 2 using our held out data from 2019 and 2020 at the 95% confidence level. We first plot our model forecasts with the historical data. The black line shows the historical data and the blue red shows the forecast made by our model. 
-
-TODO: Write about residuals
+Both Model 2 and Model 4 passed all tests. However, we went with Model since it had a higher p-value under the Shapiro Test and due to its lower AIC score. For reference, we have included a plot of the historical data (black) along side the model (red) as well as the residuals resulting from our model choice.
 
 ```{r, fig.show='hold', out.width="49%"}
 plot(fitted(model4), col = 'red', main = "Plotting Log Revenue With Model 4", ylab = "Log Revenue", xlab = "Years")
@@ -238,16 +236,29 @@ lines(logRev, pch = 3)
 model <- model4
 res = rstandard(model)
 plot_months(res, main = "Standardized Residuals of Model 4", ylab = "Residuals")
+hist(res, main = "Histogram of Standardized Residuals")
 ```
 
 
-Next we plot the model's predictions for the future. The model’s forecasts are slightly higher than the actual values, however, these appear to be within forecast limits, so while it is noticable, it is not statistically significant.
+\subsection{Forecasting}
+
+To forecast future observations, we use the forecast and predict functions to forecast our Model 2 using our held out data from 2019 and 2020 at the 95% confidence level. 
+
+We first plot our model forecasts with the historical data. The solid black line represents the historical data while the dotted line represent the predicted values from our model. The red outline corresponds to our 95% confidence interval
 
 ```{r, fig.show='hold', out.width="49%"}
 num = length(actual)
 
 res = plot(model,n.ahead=num, n1 = c(2016,2), col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Log Revenue", xlab = "Year")
 lines(logActual,pch=3) 
+abline(h=coef(model)[names(coef(model))=='intercept'])
+```
+
+Next we plot the model's predictions for the future. The model’s forecasts are slightly higher than the actual values, however, these appear to be within forecast limits, so while it is noticable, it is not statistically significant.
+
+```{r}
+num = length(actual)
+res = plot(model,n.ahead=36, col = "red", main = "Beyond 2020", ylab = "Log Revenue", xlab = "Year")
 abline(h=coef(model)[names(coef(model))=='intercept'])
 ```
 
