@@ -4,7 +4,7 @@ output: html_document
 --- 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(fig.width=8, fig.height=5) 
 
 library(ggplot2)
@@ -219,5 +219,9 @@ pacf(sarima1$residuals)
 plot(sarima1$residuals)
 runs(sarima1$residuals)
 shapiro.test(sarima1$residuals)
+```
+
+```{r}
+plot((rRev + cRev + iRev)/totalRev)
 ```
 
