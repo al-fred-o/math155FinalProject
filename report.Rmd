@@ -110,7 +110,7 @@ The 2000s are characterized by slower growth in the use of electricity and risin
 Finally the 2010s are characterized by flat electricity usage and slowly rising prices.
 Another import trend in the sales and revenue graphs is a heteroscedastic increase in variance.
 Since we are interested in modeling the total revenue with predictive power, heteroscedasticity is a problem.
-While this can sometimes be addressed via power transformations the easiest thing in our case is to chop the dataset. We use only the data from 2008 onwards which we visually observed to be where the price of electricity began to stabilize.
+While this can sometimes be addressed via power transformations the easiest thing in our case is to chop the dataset. We use only the data from 2008 onwards which we visually observed to be where the variance of the price of electricity began to stabilize. Since similar issues of heteroscedasticity appear across all of our available data, we figured this may due to some external factor changing the underlying process, and thus beleive we are justified in this decision.
 
 We can also see the electricity use breakdown by sector.
 To make the trends clearer over time, we show a 12 month moving average.
@@ -131,11 +131,127 @@ The industrial sector has little seasonal variation but is strongly impacted by 
 \section{Total Revenue Data}
 The first series we will examine is the total revenue time series.
 
+```{r, fig.show='hold', out.width="49%"}
+totalRev2 = window(totalRev/1000000, start = c(2008, 1))
+
+
+# hold actual data for later predictions
+actual = window(totalRev2, start = c(2019,1))
+totalRev2 = window(totalRev2, start = c(2008,1), end = c(2019,1))
+
+plot_months(totalRev2, main = "Total Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
+
+
+```
+ As noted earlier, due tot he odd behavior present throughout the data, we tightened our scope to only consider data past 2008. Additionally, we held out data past 2019 for the purposes of later forecasting. This resulted in a total of 132 data points. An initial observation we had was that there appeared to be a strong seasonal trend present in our data. The summer month seemed to exhibit relatively high values compared to the winter months. Additionally there appeared to be a slight upward trend in our data. 
+ 
+
 \subsection{Model Specification}
+ 
+ Our visual intuition is further confirmed by plotting the ACF and PACF of our data. 
+ 
+```{r, fig.show='hold', out.width="49%"}
+#acf and pacf
+```
+
+Plotting the ACF and PACF allows us to identify any autocorrelation present in our data, thus helping us determine an ARMA model to fit to our data. From the ACF our data is highly correlated at lag 1.0 (12 months), thus implying that our model will need a 12 month seasonal AR component. This is further exemplified by the PACF graph.
+
+Our next step is to determine if our data needs to transformed. We do this by running a Box-Cox transformation test. 
+
+```{r, fig.show='hold', out.width="49%"}
+#boxcox and resutling transformation
+
+# bc = BoxCox.ar(totalRev2)
+
+logRev = log(totalRev2)
+logActual = log(actual)
+
+plot_months(logRev, main = "Transformed Revenue (2008-2019)", ylab = "Log Revenue", xlab = "Year")
+
+acf(logRev)
+pacf(logRev)
+```
+
+
+The resulting plot provides us with a possible power transformation that contains 0 and -1 within its confidence interval. However since 0 seems to be closer to the mean likelihood estimate for $\lambda$, we transformed our data by taking the logarithm. Note that the resulting time series still contains an upward trend after transforming. To account for this, we attempted to take a first and second difference of our data and evaluate them with their respective ACF's.
+
+
+```{r, fig.show='hold', out.width="49%"}
+diffRev = diff(logRev)
+plot_months(diffRev, main = "First Difference of Log Revenue", ylab = "First Difference of Log Revenue", xlab = "Year")
+acf(diffRev, main = "First Difference ACF")
+
+
+plot_months(diffRev, main = "Second Diff of Log Revenue", ylab = "Second Difference of Log Revenue", xlab = "Year")
+acf(diff(diffRev), main = "Second Diff ACF")
+```
+
+Visually, both of approaches were able to detrend our data and this is reflected in the ACF's by the autocorrelations being near or within our margins for most of the lags. However upon close inspection, it appears that there are a few lags resulted in higher autocorrelations within the second difference ACF, implying that this may be over-differencing the data. Hence we will proceed any further analysis using the first difference.
+
+Moreover, we still observe a significant autocorrelation spike at lag 12. In order to account for this, we perform a seasonal difference to our first difference.
+
+```{r, fig.show='hold', out.width="49%"}
+seasDiffRev = diff(diffRev, lag = 12)
+plot_months(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference of Log Revenue", ylab = "First Non-Seasonal and Seasonal Difference", xlab = "Year")
+acf(seasDiffRev, main = "ACF")
+pacf(seasDiffRev)
+```
+
+Now we see that that any seasonality has been largely account for. To finally determine our candidate models, we run ARMA-Subsets and EACF for the first non-seasonal and seasonal difference of revenue. 
+
+```{r, fig.show='hold', out.width="49%"}
+eacf(seasDiffRev, ar.max = 12)
+plot(armasubsets(diffRev, nar = 12, nma = 12))
+```
+
 
 \subsection{Model Diagnostics}
 
+Moving forward with the four models previously identfied, we will train them on our data and evaluate their performance using a series of tests to assess randomness, normality and independnce.
+
+```{r, fig.show='hold', out.width="49%"}
+model1 = arima(logRev, order = c(0,1,1), seasonal = list(order=c(0,1,2),period= 12))
+model1
+model2 = arima(logRev, order = c(0,1,0), seasonal = list(order=c(0,1,1),period= 12))
+model2
+model3 = arima(logRev, order = c(0,1,1), seasonal = list(order=c(0,1,2),period= 12))
+model3
+model4 = arima(logRev, order = c(0,1,2), seasonal = list(order=c(1,1,1),period= 12))
+model4
+```
+
+TODO: Add table for of performance
+
+Both Model 2 and Model 4 passed all tests. However, we went with Model since it had a higher p-value under the Shapiro Test and due to its lower AIC score.
+
+
 \subsection{Forecasting}
+
+To forecast future observations, we use the forecast and predict functions to forecast our Model 2 using our held out data from 2019 and 2020 at the 95% confidence level. We first plot our model forecasts with the historical data. The black line shows the historical data and the blue red shows the forecast made by our model. 
+
+TODO: Write about residuals
+
+```{r, fig.show='hold', out.width="49%"}
+plot(fitted(model4), col = 'red', main = "Plotting Log Revenue With Model 4", ylab = "Log Revenue", xlab = "Years")
+lines(logRev, pch = 3)
+
+model <- model4
+res = rstandard(model)
+plot_months(res, main = "Standardized Residuals of Model 4", ylab = "Residuals")
+```
+
+
+Next we plot the model's predictions for the future. The model’s forecasts are slightly higher than the actual values, however, these appear to be within forecast limits, so while it is noticable, it is not statistically significant.
+
+```{r, fig.show='hold', out.width="49%"}
+num = length(actual)
+
+res = plot(model,n.ahead=num, n1 = c(2016,2), col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Log Revenue", xlab = "Year")
+lines(logActual,pch=3) 
+abline(h=coef(model)[names(coef(model))=='intercept'])
+```
+
+TODO: Consider adding in table with predected values
 
 \section{Commercial Revenue Data}
 The second series we will examine is the commercial revenue time series.
