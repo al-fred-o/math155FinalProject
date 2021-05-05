@@ -7,6 +7,10 @@ output: pdf_document
 header-includes:
   \DeclareMathOperator{\ARIMA}{ARIMA}
   \usepackage{float}
+  \usepackage{amssymb}
+  \usepackage{xcolor}
+  \newcommand{\greencheck}{{\color{green}\checkmark}}
+  \newcommand{\redex}{{\color{red}\times}}
 ---
 
 ```{r setup, include=FALSE}
@@ -213,18 +217,48 @@ Moving forward with the four models previously identified, we will train them on
 
 ```{r, fig.show='hold', out.width="49%"}
 model1 = arima(logRev, order = c(0,1,1), seasonal = list(order=c(0,1,2),period= 12))
-model1
 model2 = arima(logRev, order = c(0,1,0), seasonal = list(order=c(0,1,1),period= 12))
-model2
 model3 = arima(logRev, order = c(0,1,1), seasonal = list(order=c(0,1,2),period= 12))
-model3
 model4 = arima(logRev, order = c(0,1,2), seasonal = list(order=c(1,1,1),period= 12))
-model4
 ```
+
+| Model 1 | MA1 | SMA1 |  SMA2 |
+| ----------- | ----------- | ----------- | ----------- |
+| Coeff. | -0.2142 | -0.8220 | -0.1780 | 
+| Standard Error | 0.1059 | 0.2165 | 0.1037 | 
+| $\sigma^2 = 0.0005561$ | Log-likelihood = 266.6 | AIC =-527.2| |
+
+| Model 2 | SMA1 |
+| ----------- | ----------- |
+| Coeff. | -0.7873 |
+| Standard Error | 0.1160 |
+| $\sigma^2 = 0.0006586$ | Log-likelihood = 263.48 AIC =-524.96 |
+
+
+| Model 3 | MA1 | SMA1 | SMA2 |
+| ----------- | ----------- | ----------- | ----------- |
+| Coeff. | -0.2142 | -0.8220 | -0.1780
+| Standard Error | 0.1059 | 0.2165 | 0.1037
+| $\sigma^2 = 0.0005561$ | Log-likelihood = 266.6 | AIC =-527.2 |
+
+
+| Model 4 | MA1 | MA2 | SAR1 | SAR2|
+| ----------- | ----------- | ----------- | ----------- | ----------- |
+| Coeff. | -0.2169 | -0.1431 | 0.1800 | -0.9997
+| Standard Error | 0.0970 | 0.1036  0.1071 | 0.2615
+| $\sigma^2 = 0.0005518$ | Log-likelihood = 267.39 | AIC = -526.78 |
+
 
 From the models themselves it is worth noting that Models 1, 3, and 4 had similar scores for AIC, whereas Model 2 appeared to score a few points lower. Additionally most, if not all, coefficients appear to be statistically significant since zero is more that a standard error away from the derived value.
 
-TODO: Add table for of performance
+|  | Model 1 | Model 2 | Model 3 | Model 4|
+| ----------- | ----------- | ----------- | ----------- | ----------- |
+| Runs Test | 0.013 $\redex$| 0.506 $\greencheck$ | 0.0137 $\redex$| 0.0676 $\greencheck$|
+| Shapiro-Wilk Test | 0.6402 $\greencheck$ | 0.1992 $\greencheck$| 0.6402 $\greencheck$|  0.6032 $\greencheck$|
+| Box-Ljung Test |  0.09032 $\greencheck$| 0.2217 $\greencheck$| 0.09032 $\greencheck$| 0.1331 $\greencheck$|
+| QQ Plot | Normal | Normal $\greencheck$| Normal $\greencheck$| Normal $\greencheck$|
+| Histogram | Normal | Normal $\greencheck$| Normal $\greencheck$| Normal $\greencheck$|
+
 
 From the summary table of diagnostics, we note that Model 1 and Model 3 both fail the runs the test, thus we must reject the hypothesis that the residuals are independent. However for examples, there is insufficient evidence to reject the hypotheses that the residuals are normally distributed. Additionally, the Box-Ljung test fails to reject the hypotheses that the models do not show lack of fit. In the end, the lack of independence within the residuals was sufficient for us to reject these two models and more closely consider the remaining.
 
@@ -262,8 +296,6 @@ num = length(actual)
 res = plot(model,n.ahead=36, col = "red", main = "Beyond 2020", ylab = "Log Revenue", xlab = "Year")
 abline(h=coef(model)[names(coef(model))=='intercept'])
 ```
-
-TODO: Consider adding in table with predected values
 
 \section{Commercial Revenue Data}
 The second series we will examine is the commercial revenue time series.
