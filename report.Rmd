@@ -352,17 +352,43 @@ plot(armasubsets(cRev_diff11, nar = 12, nma = 12))
 
 Continuing with the seasonally and non-seasonally first differenced data, the top 3 models all suggest a seasonal autoregressive term and a non-seasonal moving average term.
 The top 2 models also include a moving average term of lag 9, although we choose to ignore this as it doesn't appear in the autocorrelation plot and is not parsimonious with a periodicity of 12 that shows up elsewhere in the data.
+Therefore we will take our 4th model to be an $\ARIMA(0,1,1) \times (1,1,0)_{12}$ process.
 
-```{r, echo = TRUE}
-eacf(cRev_diff01)
+Finally, we check the extended auto correlation function of each series to evaluate if these models appear in the EACF charts as well.
+
+```{r}
+eacf(cRev_diff01, ar.max = 13, ma.max = 13)
+eacf(cRev_diff11, ar.max = 13, ma.max = 13)
 ```
 
-\begin{figure}
-\includegraphics[width = .4\linewidth]{plots/sectors.png}
-\end{figure}
+TODO: write about EACF
 
 \subsection{Model Diagnostics}
+We now define our 4 models and evaluate them.
+```{r, echo = FALSE}
+cRev_model1 = arima(cRev2, order = c(1,0,0), seasonal = list(order=c(0,1,0),period= 12))
+cRev_model2 = arima(cRev2, order = c(2,0,0), seasonal = list(order=c(1,1,0),period= 12))
+cRev_model3 = arima(cRev2, order = c(1,0,0), seasonal = list(order=c(0,1,1),period= 12))
+cRev_model4 = arima(cRev2, order = c(0,1,1), seasonal = list(order=c(1,1,0),period= 12))
+```
 
+The first test we will perform is the runs test which checks if the residuals have remaining correlations.
+The runs test p-values on the 4 models are:
+```{r}
+runs_tests = vector(mode = "numeric", length = 4)
+runs_tests[1] = runs(cRev_model1$residuals)$pvalue
+runs_tests[2] = runs(cRev_model2$residuals)$pvalue
+runs_tests[3] = runs(cRev_model3$residuals)$pvalue
+runs_tests[4] = runs(cRev_model4$residuals)$pvalue
+print(runs_tests)
+```
+
+We see that models 1, 2, and 3 all have p-values above 0.05 indicating that they pass the runs test.
+However, model 3 has a significantly larger p-value than the first two indicating it more comfortably passes the test.
+Model 4 does not pass the test, and a more detailed look at the ouput shows that it has only 54 observed runs compared to 67.3 expected runs.
+This indicates that the residuals from model 4 still are positively correlated.
+
+Moving
 \subsection{Forecasting}
 
 \section{Discussion}
