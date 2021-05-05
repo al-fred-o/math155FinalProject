@@ -1,0 +1,33 @@
+---
+title: "Math 155 Final Report"
+author: 
+- name: Steven Litvack-Winkler
+- name: Alfredo Gomez
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+abstract: "We describe a time series model for the total electricity consumption of the United States from 2008 through 2018. We found that that an $\ARIMA(0,1,1) \times \ARIMA(1,1,1)_{12}$ model best fits the data and passes the runs, Shapiro-Wilk, and Box-Ljung tests.Applying the forecast of the model to 2019 through the present, we see that the actual data falls within the 95th-percent confidence band of the forecast. We take similar steps to model the electricity consumption of the commercial sector over the same time period and reach a similar $\ARIMA(0,1,1) \times \ARIMA(1,1,1)_{12}$ process. However the model no longer passes the Shapiro-Wilk test and the actual electricity usage in March and April 2020 falls outside of the models forecast."
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
