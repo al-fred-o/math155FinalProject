@@ -127,12 +127,14 @@ rMA = filter(rRev,rep(1,13)/13,sides=2) # 1 year MA
 cMA = filter(cRev,rep(1,13)/13,sides=2) # 1 year MA
 iMA = filter(iRev,rep(1,13)/13,sides=2) # 1 year MA
 
-plot(cbind(totalMA/1e6,rMA/1e6,cMA/1e6, iMA/1e6),plot.type='single',col=4:1,lwd=2, ylab="sales (Millions of $)", main = "Electricity sales (12 month MA) by Sector")
+plot(cbind(totalMA/1e6,rMA/1e6,cMA/1e6, iMA/1e6),plot.type='single',col=4:1,lwd=2, ylab="sales (Millions of $)", main = "Electricity Sales (12 month MA) by Sector")
 legend(x = 'topleft', legend = c('Total', 'Residential', 'Commercial', 'Industrial'), col = 4:1, lwd = 2)
 ```
 
 Interestingly, the 3 sectors all show their own trends. 
 The industrial sector has little seasonal variation but is strongly impacted by the business cycle with revenues dropping significantly in great recession of 2008 - 2009 and during the lockdowns from COVID-19.
+The residential and commercial revenue both show noticeable seasonal trends although the residential revenues month to month variation appears to be higher. 
+Additionally, the residential revenue has grown more over time than the commercial revenue.
 
 \section{Total Revenue Data}
 The first series we will examine is the total revenue time series.
@@ -149,7 +151,7 @@ plot_months(totalRev2, main = "Total Revenue (2008-2019)", ylab = "Revenue (Mill
 
 
 ```
- As noted earlier, due tot he odd behavior present throughout the data, we tightened our scope to only consider data past 2008. Additionally, we held out data past 2019 for the purposes of later forecasting. This resulted in a total of 132 data points. An initial observation we had was that there appeared to be a strong seasonal trend present in our data. The summer month seemed to exhibit relatively high values compared to the winter months. Additionally there appeared to be a slight upward trend in our data. 
+ As noted earlier, due to the odd behavior present throughout the data, we tightened our scope to only consider data past 2008. Additionally, we held out data past 2019 for the purposes of later forecasting. This resulted in a total of 132 data points. An initial observation we had was that there appeared to be a strong seasonal trend present in our data. The summer month seemed to exhibit relatively high values compared to the winter months. Additionally there appeared to be a slight upward trend in our data. 
  
 
 \subsection{Model Specification}
@@ -158,6 +160,7 @@ plot_months(totalRev2, main = "Total Revenue (2008-2019)", ylab = "Revenue (Mill
  
 ```{r, fig.show='hold', out.width="49%"}
 #acf and pacf
+acf_pacf(totalRev2, "Total Revenue")
 ```
 
 Plotting the ACF and PACF allows us to identify any autocorrelation present in our data, thus helping us determine an ARMA model to fit to our data. From the ACF our data is highly correlated at lag 1.0 (12 months), thus implying that our model will need a 12 month seasonal AR component. This is further exemplified by the PACF graph.
@@ -263,7 +266,7 @@ From the models themselves it is worth noting that Models 1, 3, and 4 had simila
 
 From the summary table of diagnostics, we note that Model 1 and Model 3 both fail the runs the test, thus we must reject the hypothesis that the residuals are independent. However for examples, there is insufficient evidence to reject the hypotheses that the residuals are normally distributed. Additionally, the Box-Ljung test fails to reject the hypotheses that the models do not show lack of fit. In the end, the lack of independence within the residuals was sufficient for us to reject these two models and more closely consider the remaining.
 
-Both Model 2 and Model 4 passed all tests. However, we went with Model since it had a higher p-value under the Shapiro Test and due to its lower AIC score. For reference, we have included a plot of the historical data (black) along side the model (red) as well as the residuals resulting from our model choice.
+Both Model 2 and Model 4 passed all tests. However, we went with Model 4 since it had a higher p-value under the Shapiro Test and due to its lower AIC score. For reference, we have included a plot of the historical data (black) along side the model (red) as well as the residuals resulting from our model choice.
 
 ```{r, fig.show='hold', out.width="49%"}
 plot(fitted(model4), col = 'red', main = "Plotting Log Revenue With Model 4", ylab = "Log Revenue", xlab = "Years")
@@ -285,9 +288,10 @@ We first plot our model forecasts with the historical data. The solid black line
 ```{r, fig.show='hold', out.width="49%"}
 num = length(actual)
 
+# transform = exp - Predicts the untransformed series.
 res = plot(model,n.ahead=num, n1 = c(2016,2), col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Log Revenue", xlab = "Year")
 lines(logActual,pch=3) 
-abline(h=coef(model)[names(coef(model))=='intercept'])
+# abline(h=coef(model)[names(coef(model))=='intercept'])
 ```
 
 Next we plot the model's predictions for the future. The model’s forecasts are slightly higher than the actual values, however, these appear to be within forecast limits, so while it is noticable, it is not statistically significant.
@@ -308,7 +312,7 @@ plot_months(cRev, main = "Commercial Revenue (1990-2020)", ylab = "Revenue (Mill
 cRev2 = window(cRev, start = c(2008, 1))
 
 # hold actual data for later predictions
-actual = window(cRev2, start = c(2019,1))
+cRev_held = window(cRev2, start = c(2019,1))
 cRev2 = window(cRev2, start = c(2008,1), end = c(2018,12))
 
 plot_months(cRev2, main = "Commercial Revenue (2008-2018)", ylab = "Revenue (Millions)", xlab = "Year")
@@ -522,6 +526,30 @@ The full summary of test results is given in the table below:
 
 \subsection{Forecasting}
 
+To further test our model we will check its predictions on the data from 2019 and 2020.
+As before we plot the true data in a black line, the predicted points as blue circles and the forecasts 95% confidence band in red.
+
+```{r, fig.show='hold', out.width="70%"}
+num = length(cRev_held)
+
+model5forecast_reg = matrix(nrow = num, ncol = 12)
+months_forecast. = season(cRev_held)
+
+for (i in 1:11){
+  model5forecast_reg[,i] = as.numeric(months_forecast. == months_forecast.[i])
+}
+model5forecast_reg[,12] = time(cRev_held) - 2008
+
+plot(cRev_model5,n.ahead=num, n1 = c(2017,1), newxreg = model5forecast_reg, col = "red", main = "Model 3 Forecast", ylab ="Revenue (Millions $)", xlab = "Year", add = TRUE)
+lines(cRev_held,pch=3) 
+```
+
+We see that the forecast performed quite well through most of 2019 although it did overestimate the observed value in June 2019.
+However, beginning in February 2021, the observed data lies entirely below the forecasts 95% confidence interval.
+This implies that the electricity revenue for 2021 was very unusual from a historical perspective.
+However, given the circumstances of the COVID-19 pandemic and the lockdowns that followed it we think it is likely this impacted the commercial revenue data and explains the models overpredictions.
+Commercial users of electricity include schools, offices, and malls and these buildings were largely operating at far below their normal capacity.
+Further evidence for this theory is given by the fact that our models prediction was most off in April at the beginning of lockdowns in many states.\footnote{California was the first state to issue a formal lockdown on March 20, 2020. \url{https://www.ksla.com/2020/03/20/california-becomes-first-state-order-lockdown/}}
 \section{Discussion}
 
 \section{Conclusion}
