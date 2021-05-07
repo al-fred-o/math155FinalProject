@@ -145,6 +145,7 @@ totalRev2 = window(totalRev/1000000, start = c(2008, 1))
 
 # hold actual data for later predictions
 actual = window(totalRev2, start = c(2019,1))
+print(actual)
 totalRev2 = window(totalRev2, start = c(2008,1), end = c(2019,1))
 
 plot_months(totalRev2, main = "Total Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
@@ -288,10 +289,8 @@ We first plot our model forecasts with the historical data. The solid black line
 ```{r, fig.show='hold', out.width="49%"}
 num = length(actual)
 
-# transform = exp - Predicts the untransformed series.
-res = plot(model,n.ahead=num, n1 = c(2016,2), col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Log Revenue", xlab = "Year")
-lines(logActual,pch=3) 
-# abline(h=coef(model)[names(coef(model))=='intercept'])
+res = plot(model,n.ahead=num, n1 = c(2016,2), transform = exp, col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Total Revenue", xlab = "Year")
+lines(actual,pch=3) 
 ```
 
 Next we plot the model's predictions for the future. The model’s forecasts are slightly higher than the actual values, however, these appear to be within forecast limits, so while it is noticeable, it is not statistically significant.
