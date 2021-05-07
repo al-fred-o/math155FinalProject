@@ -1,6 +1,6 @@
 ---
 title: "Math 155 Final Report"
-author: Alfredo Gomez and Alfredo Gomez
+author: Steven Litvack-Winkler and Alfredo Gomez
 
 date: "May 5, 2021"
 output: pdf_document
@@ -80,8 +80,10 @@ stationary_test <- function(series){
 We describe a time series model for the total electricity consumption of the United States from 2008 through 2018.
 We found that that an $\ARIMA(0,1,1) \times \ARIMA(1,1,1)_{12}$ model best fits the data and passes the runs, Shapiro-Wilk, and Box-Ljung tests. 
 Applying the forecast of the model to 2019 through the present, we see that the actual data falls within the 95th-percent confidence band of the forecast.
-We take similar steps to model the electricity consumption of the commercial sector over the same time period and reach a similar $\ARIMA(0,1,1) \times \ARIMA(1,1,1)_{12}$ process.
-However the model no longer passes the Shapiro-Wilk test and the actual electricity usage in March and April 2020 falls outside of the models forecast.
+We take similar steps to model the electricity consumption of the commercial sector over the same time period and reach a slightly different $\ARIMA(2,0,0) $ process, accounting for seasonality with monthly means and time since
+the start of the series as regressors.
+While the model does not pass pass the Shapiro-Wilk test, performs fairly well under other metrics. The final model is also able to predict most of the data fairly well, with the exception of March and April 2020, which falls outside of the models forecast. However, this behavior is expected as a result of US COVID-19 lockdown restrictions during this time.
+
 \end{abstract}
 
 \section{Introduction}
@@ -209,11 +211,12 @@ pacf(seasDiffRev)
 Now we see that that any seasonality has been largely account for. To finally determine our candidate models, we run ARMA-Subsets and EACF for the first non-seasonal and seasonal difference of revenue. Firstly, the ARMA subset for the first non-seasonal and seasonal difference suggested a model with no non-seasonal AR terms, but possibly a seasonal AR term. Additionally it suggests a seasonal MA term in addition to a few non-seasonal AR terms. Thus some of the seasonal components were $(1,1,2)_{12}$, $(1,1,0)_{12}$ and $(0,1,2)_{12}$. Looking at the EACF, it seemed fairly possible that our model could contain up to two non-seasonal MA terms and at most one AR component depending on which values we count as false positives within the plot. 
 
 ```{r, fig.show='hold', out.width="70%"}
+print("Total Revenue EACF")
 eacf(seasDiffRev, ar.max = 12)
 plot(armasubsets(diffRev, nar = 12, nma = 12))
 ```
 
-Using this information we reduced our search to the following models: $ARIMA(0,1,1)\times(0,1,2)_{12}$, $ARIMA(0,1,0)\times(0,1,1)_{12}$, $ARIMA(0,1,1)\times(0,1,2)_{12}$, $ARIMA(0,1,2)\times(1,1,1)_{12}$.
+Using this information we reduced our search to the following models: $\ARIMA(0,1,1)\times(0,1,2)_{12}$, $\ARIMA(0,1,0)\times(0,1,1)_{12}$, $\ARIMA(0,1,1)\times(0,1,2)_{12}$, $\ARIMA(0,1,2)\times(1,1,1)_{12}$.
 
 \subsection{Model Diagnostics}
 
@@ -253,7 +256,6 @@ model4 = arima(logRev, order = c(0,1,2), seasonal = list(order=c(1,1,1),period= 
 | $\sigma^2 = 0.0005518$ | Log-likelihood = 267.39 | AIC = -526.78 |
 
 
-
 From the models themselves it is worth noting that Models 1, 3, and 4 had similar scores for AIC, whereas Model 2 appeared to score a few points lower. Additionally most, if not all, coefficients appear to be statistically significant since zero is more that a standard error away from the derived value.
 
 |  | Model 1 | Model 2 | Model 3 | Model 4|
@@ -283,19 +285,19 @@ hist(res, main = "Histogram of Standardized Residuals")
 
 To forecast future observations, we use the forecast and predict functions to forecast our Model 2 using our held out data from 2019 and 2020 at the 95% confidence level. 
 
-We first plot our model forecasts with the historical data. The solid black line represents the historical data while the dotted line represent the predicted values from our model. The red outline corresponds to our 95% confidence interval
+We first plot our model forecasts with the historical data. The solid black line represents the historical data while the dotted line represent the predicted values from our model. The red outline corresponds to our 95% confidence interval. From the plot, we observe that our model is able to account for the seasonality of our data and give us pretty accurate predictions, with all of our observations being within the 95% forecast limits. However, one thing we noticed is that our predictions are consistently over the historical value, while this is not statiscally significant given the confidence interval, it is worth bringing up this positive bias as it seems more pronounce in the Commercial revenue, as will be discussed in the next section.
 
 ```{r, fig.show='hold', out.width="65%"}
 num = length(actual)
 
-res = plot(model,n.ahead=num, n1 = c(2016,2), transform = exp, col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Total Revenue", xlab = "Year")
+res = plot(model,n.ahead=num, n1 = c(2016,2), transform = exp, col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Total Revenue (Millions)", xlab = "Year")
 lines(actual,pch=3) 
 ```
 
-Next we plot the model's predictions for the future. The model’s forecasts are slightly higher than the actual values, however, these appear to be within forecast limits, so while it is noticeable, it is not statistically significant.
+We also plot the model's predictions further into the future. Overall we do see a slight positive trend moving towards the future according to our model.
 
 ```{r, out.width="65%"}
-res = plot(model,n.ahead=36, transform = exp, col = "red", main = "Beyond 2020 Forecast", ylab ="Total Revenue", xlab = "Year")
+res = plot(model,n.ahead=36, transform = exp, col = "red", main = "Beyond 2020 Forecast", ylab ="Total Revenue (Millions)", xlab = "Year")
 ```
 
 
@@ -566,3 +568,5 @@ Therefore, the total electricity revenue series had a weaker decline in 2020 tha
 Cryer, Jonathan D., and Kung-sik Chan. Time Series Analysis with Applications in R. Springer, 2011.
 
 \url{https://www.eia.gov/electricity/data.php#sales}
+
+Source Code found in Appendix.

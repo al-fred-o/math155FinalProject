@@ -102,7 +102,8 @@ totalRev2 = window(totalRev/1000000, start = c(2008, 1))
 actual = window(totalRev2, start = c(2019,1))
 totalRev2 = window(totalRev2, start = c(2008,1), end = c(2018,12))
 
-plot_months(totalRev2, main = "Total Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
+plot_months(totalRev2, main = "Total Revenue (2008-2019)", 
+            ylab = "Revenue (Millions)", xlab = "Year")
 
 #acf and pacf
 acf_pacf(totalRev2, "Total Revenue")
@@ -119,7 +120,8 @@ bc = BoxCox.ar(totalRev2)
 logRev = log(totalRev2)
 logActual = log(actual)
 
-plot_months(logRev, main = "Transformed Revenue (2008-2019)", ylab = "Log Revenue", xlab = "Year")
+plot_months(logRev, main = "Transformed Revenue (2008-2019)", 
+            ylab = "Log Revenue", xlab = "Year")
 
 acf(logRev)
 pacf(logRev)
@@ -127,16 +129,19 @@ pacf(logRev)
 
 
 diffRev = diff(logRev)
-plot_months(diffRev, main = "First Difference of Log Revenue", ylab = "First Difference of Log Revenue", xlab = "Year")
+plot_months(diffRev, main = "First Difference of Log Revenue", 
+            ylab = "First Difference of Log Revenue", xlab = "Year")
 acf(diffRev, main = "First Difference ACF")
 
 
-plot_months(diffRev, main = "Second Diff of Log Revenue", ylab = "Second Difference of Log Revenue", xlab = "Year")
+plot_months(diffRev, main = "Second Diff of Log Revenue", 
+            ylab = "Second Difference of Log Revenue", xlab = "Year")
 acf(diff(diffRev), main = "Second Diff ACF")
 
 
 seasDiffRev = diff(diffRev, lag = 12)
-plot_months(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference of Log Revenue", ylab = "First Non-Seasonal and Seasonal Difference", xlab = "Year")
+plot_months(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference of Log Revenue", 
+            ylab = "First Non-Seasonal and Seasonal Difference", xlab = "Year")
 acf(seasDiffRev, main = "ACF")
 pacf(seasDiffRev)
 
@@ -168,7 +173,8 @@ shapiro.test(res1)
 LB.test(model1)
 
 
-plot(fitted(model4), col = 'red', main = "Plotting Log Revenue With Model 4", ylab = "Log Revenue", xlab = "Years")
+plot(fitted(model4), col = 'red', main = "Plotting Log Revenue With Model 4", 
+     ylab = "Log Revenue", xlab = "Years")
 lines(logRev, pch = 3)
 
 model <- model4
@@ -183,10 +189,12 @@ hist(res, main = "Histogram of Standardized Residuals")
 
 num = length(actual)
 
-res = plot(model,n.ahead=num, n1 = c(2016,2), transform = exp, col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Total Revenue", xlab = "Year")
+res = plot(model,n.ahead=num, n1 = c(2016,2), transform = exp, col = "red", 
+           main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Total Revenue", xlab = "Year")
 lines(actual,pch=3) 
 
-res = plot(model,n.ahead=36, transform = exp, col = "red", main = "Beyond 2020 Forecast", ylab ="Total Revenue", xlab = "Year")
+res = plot(model,n.ahead=36, transform = exp, col = "red", main = "Beyond 2020 Forecast", 
+           ylab ="Total Revenue", xlab = "Year")
 ```
 
 ## Commercial Data
@@ -196,7 +204,8 @@ res = plot(model,n.ahead=36, transform = exp, col = "red", main = "Beyond 2020 F
 
 ```{r, results='hide', fig.show='hide'}
 cRev <- ts(data$C_Revenue/1000000,start=c(1990,1),frequency=12)
-plot_months(cRev, main = "Commercial Revenue (1990-2020)", ylab = "Revenue (Millions)", xlab = "Year")
+plot_months(cRev, main = "Commercial Revenue (1990-2020)", 
+            ylab = "Revenue (Millions)", xlab = "Year")
 
 cRev2 = window(cRev, start = c(2008, 1))
 
@@ -204,7 +213,8 @@ cRev2 = window(cRev, start = c(2008, 1))
 cRev_held = window(cRev2, start = c(2019,1))
 cRev2 = window(cRev2, start = c(2008,1), end = c(2018,12))
 
-plot_months(cRev2, main = "Commercial Revenue (2008-2018)", ylab = "Revenue (Millions)", xlab = "Year")
+plot_months(cRev2, main = "Commercial Revenue (2008-2018)", 
+            ylab = "Revenue (Millions)", xlab = "Year")
 
 acf_pacf(cRev2, "Commercial Revenue")
 
@@ -216,7 +226,8 @@ cRev_diff10 = diff(cRev2)
 cRev_diff11 = diff(cRev_diff01)
 plot(cRev_diff10, main = "First Difference", ylab = "")
 plot(cRev_diff01, main = "Seasonal First Difference", ylab = "")
-plot(cRev_diff11, main = "First Difference and Seasonal First Difference", ylab = "")
+plot(cRev_diff11, main = "First Difference and Seasonal First Difference", 
+     ylab = "")
 ```
 
 ### Model Specification
@@ -295,7 +306,8 @@ for (i in 1:11){
 }
 model5forecast_reg[,12] = time(cRev_held) - 2008
 
-plot(cRev_model5,n.ahead=num, n1 = c(2017,1), newxreg = model5forecast_reg, col = "red", main = "Model 3 Forecast", ylab ="Revenue (Millions $)", xlab = "Year", add = TRUE)
+plot(cRev_model5,n.ahead=num, n1 = c(2017,1), newxreg = model5forecast_reg, 
+     col = "red", main = "Model 3 Forecast", ylab ="Revenue (Millions $)", xlab = "Year", add = TRUE)
 lines(cRev_held,pch=3) 
 ```
 
