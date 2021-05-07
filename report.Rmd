@@ -208,7 +208,7 @@ pacf(seasDiffRev)
 
 Now we see that that any seasonality has been largely account for. To finally determine our candidate models, we run ARMA-Subsets and EACF for the first non-seasonal and seasonal difference of revenue. Firstly, the ARMA subset for the first non-seasonal and seasonal difference suggested a model with no non-seasonal AR terms, but possibly a seasonal AR term. Additionally it suggests a seasonal MA term in addition to a few non-seasonal AR terms. Thus some of the seasonal components were $(1,1,2)_{12}$, $(1,1,0)_{12}$ and $(0,1,2)_{12}$. Looking at the EACF, it seemed fairly possible that our model could contain up to two non-seasonal MA terms and at most one AR component depending on which values we count as false positives within the plot. 
 
-```{r, fig.show='hold', out.width="49%"}
+```{r, fig.show='hold', out.width="70%"}
 eacf(seasDiffRev, ar.max = 12)
 plot(armasubsets(diffRev, nar = 12, nma = 12))
 ```
@@ -285,7 +285,7 @@ To forecast future observations, we use the forecast and predict functions to fo
 
 We first plot our model forecasts with the historical data. The solid black line represents the historical data while the dotted line represent the predicted values from our model. The red outline corresponds to our 95% confidence interval
 
-```{r, fig.show='hold', out.width="49%"}
+```{r, fig.show='hold', out.width="65%"}
 num = length(actual)
 
 res = plot(model,n.ahead=num, n1 = c(2016,2), transform = exp, col = "red", main = "ARIMA(0,1,2)x(1,1,1)_12 Forecast", ylab ="Total Revenue", xlab = "Year")
@@ -294,7 +294,7 @@ lines(actual,pch=3)
 
 Next we plot the model's predictions for the future. The model’s forecasts are slightly higher than the actual values, however, these appear to be within forecast limits, so while it is noticeable, it is not statistically significant.
 
-```{r}
+```{r, out.width="65%"}
 res = plot(model,n.ahead=36, transform = exp, col = "red", main = "Beyond 2020 Forecast", ylab ="Total Revenue", xlab = "Year")
 ```
 
