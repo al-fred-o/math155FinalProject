@@ -14,7 +14,7 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.align = "center", fig.show = "hold")
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center", fig.show = "hold")
 
 library(ggplot2)
 library(TSA)
@@ -414,24 +414,23 @@ cRev_model5 = arima(cRev2, order = c(2, 0, 0), xreg = monthsTime_reg)
 The five models are defined below.
 The fifth model is described in two tables since it has more parameters.
 
-| Model 1 | AR1 |
-| ----------- | ----------- |
-| Coeff. | 0.7417 |
-| Std. Error | 0.0612 |
+| Model 1 | AR1 | $\sigma^2$ |
+| ----------- | ----------- | ----------- |
+| Coeff. | 0.7417 | 0.0814 | 0.0612 |
 
-| Model 2 | AR1 | AR2 | SAR1|
-| ----------- | ----------- | ----------- | ----------- |
-| Coeff. | 0.6650 | 0.1464 | -0.4407 |
+| Model 2 | AR1 | AR2 | SAR1| $\sigma^2$ |
+| ----------- | ----------- | ----------- | ----------- | ----------- |
+| Coeff. | 0.6650 | 0.1464 | -0.4407 | 0.06706 |
 | Std. Error | 0.0906 | 0.0904 | 0.0958 |
 
-| Model 3 | AR1 | SAR1|
-| ----------- | ----------- | ----------- |
-| Coeff. | 0.8001 | -0.5996 |
+| Model 3 | AR1 | SAR1| $\sigma^2$ |
+| ----------- | ----------- | ----------- | ----------- |
+| Coeff. | 0.8001 | -0.5996 | 0.06376 |
 | Std. Error | 0.0591 | 0.1066 |
 
-| Model 4 | MA1 | SAR1|
-| ----------- | ----------- | ----------- |
-| Coeff. | -0.2667 | -0.4496 |
+| Model 4 | MA1 | SAR1| $\sigma^2$ |
+| ----------- | ----------- | ----------- | ----------- |
+| Coeff. | -0.2667 | -0.4496 | 0.07225 |
 | Std. Error | 0.0927 | 0.0951 |
 
 | Model 5 | AR1 | AR2 | Intercept | Time | Jan | Feb | Mar |
@@ -439,9 +438,9 @@ The fifth model is described in two tables since it has more parameters.
 | Coeff. | 0.5517 | 0.2015 | 10.1166 | 0.1119 | 0.2803 | -0.3008 | -0.0326 |
 | Std. Error | 0.0852 | 0.0851 | 0.1514 | 0.0215 | 0.0721 | 0.0820 | 0.0911 |
 
-| Model 5 | Apr | May | Jun | Jul | Aug | Sep | Oct | Nov |
-| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
-| Coeff. | -0.4250 | 0.4665 |  2.0153 | 3.0949 | 3.1378 | 2.042 | 0.9052 | -0.2968 |
+| Model 5 | Apr | May | Jun | Jul | Aug | Sep | Oct | Nov | $\sigma^2$ |
+| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
+| Coeff. | -0.4250 | 0.4665 |  2.0153 | 3.0949 | 3.1378 | 2.042 | 0.9052 | -0.2968 | 0.0442 |
 | Std. Error | 0.0721 | 0.0820 | 0.0911 | 0.0962 | 0.0991 | 0.0998 | 0.0987 | 0.0955 | 0.090 | 0.0803 | 0.0700 |
 
 The first test we will perform is the runs test which checks if the residuals have remaining correlations.
