@@ -472,6 +472,7 @@ shapiro_tests[5] = shapiro.test(cRev_model5$residuals)$p.value
 print(shapiro_tests)
 ```
 In fact, we see that all of the models fail the Shapiro-Wilk test so this won't help us much in deciding which is best.
+This likely indicates that the dataset contains some strong outliers that all of the models struggle to fit.
 
 We can consider the Ljung-Box test which also checks if the correlations between the residuals are significant.
 Since our dataset is seasonal with lag 12 we use the default value of including 12 autocorrelations in the Ljung-Box test.
@@ -549,6 +550,19 @@ Further evidence for this theory is given by the fact that our models prediction
 \section{Discussion \& Conclusion}
 
 In conclusion, this project explores time series data for U.S. electricity revenue from 2008-Present. Through trying various transformations and differencing approaches, we arrive at a handful of d models. These models are tested for independence, randomness, normality, and "good-ness of fit", from which we select a single model. The selected model is then used to analyze held-out data as well as forecast future observations.
+
 In the case of total revenue, our final model was an $\ARIMA(0,1,1)\times (1,1,1)_{12}$. We found this model captures the seasonality of our data fairly well, as for to capture all of our held-out data within a 95% confidence interval. However, we note that our model seemed to have a slight postive bias, overpredicting most points. We hypothesize that this is due to the global influence of the novel COVID-19 virus causing a measurable decrease due to lockdowns across the country.
 
+For the commercial revenue series we used an $\ARIMA(2,0,0)$ model with monthly means and time since the start of the series as regressors.
+This model fit the data very well with low errors although it failed the Shapiro-Wilk test indicating that the residuals of the model are not normally distributed. 
+We believe this is due to underlying outliers in the dataset.
+When predicting with the model, it performed quite well in 2019 but struggled in 2020.
+This is likely because of the effect of COVID-19 that are model could not have anticipated since no comparable event occurred in its training data.
+The model for commercial revenue missed even more than our prior model for the total revenue.
+We believe this is because while commercial and industrial electricity use dropped during COVID, the residential sector use of electricity increased.
+Therefore, the total electricity revenue series had a weaker decline in 2020 than the commercial electricity revenue series.
+
 \section{References}
+Cryer, Jonathan D., and Kung-sik Chan. Time Series Analysis with Applications in R. Springer, 2011.
+
+\url{https://www.eia.gov/electricity/data.php#sales}
