@@ -290,7 +290,7 @@ lines(logActual,pch=3)
 abline(h=coef(model)[names(coef(model))=='intercept'])
 ```
 
-Next we plot the model's predictions for the future. The model’s forecasts are slightly higher than the actual values, however, these appear to be within forecast limits, so while it is noticable, it is not statistically significant.
+Next we plot the model's predictions for the future. The model’s forecasts are slightly higher than the actual values, however, these appear to be within forecast limits, so while it is noticeable, it is not statistically significant.
 
 ```{r}
 num = length(actual)
@@ -522,8 +522,9 @@ The full summary of test results is given in the table below:
 
 \subsection{Forecasting}
 
-\section{Discussion}
+\section{Discussion & Conclusion}
 
-\section{Conclusion}
+In conclusion, this project explores time series data for U.S. electricity revenue from 2008-Present. Through trying various transformations and differencing approaches, we arrive at a handful of d models. These models are tested for independence, randomness, normality, and "good-ness of fit", from we select a single model. The selected model is then used to analyze held-out data as well as forecast future observations.
+  In the case of total revenue, our final model was an $ARIMA(0,1,1)\times (1,1,1)_12$. We found this model captures the seasonality of our data fairly well, as for to capture all of our held-out data within a 95% confidence interval. However, we note that our model seemed to have a slight postive bias, overpredicting most points. We hypothesize that this is due to the global influence of the novel COVID-19 virus causing a measurable decrease due to lockdowns across the country.
 
 \section{References}
