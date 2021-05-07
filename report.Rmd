@@ -92,7 +92,8 @@ Our dataset includes the electricity consumption from 1990 to the present.\footn
 The data is broken down by state (including DC and Puerto Rico) and energy sector.
 The energy sectors are residential, commercial, industrial and transportation/other (the other sector is recorded from 1990 - 2002 and the transportation sector is recorded from 2003 to the present).
 The dataset measures the electricity consumption in four different ways: revenue in thousands of dollars, sales in MWh, price in cents/kWh, and number of customers (the number of customers is present in the dataset only after 2007).
-
+For this paper we focus on modeling only the national electricity revenue and we look at the total revenue and the commercial sector only.
+To reduce the scale of the data, the revenue is measured in millions of dollars.
 
 \subsection{Data Exploration}
 Graphs of the revenue, price, and sales of total electricity in the US are given below.
@@ -308,9 +309,9 @@ cRev2 = window(cRev, start = c(2008, 1))
 
 # hold actual data for later predictions
 actual = window(cRev2, start = c(2019,1))
-cRev2 = window(cRev2, start = c(2008,1), end = c(2019,1))
+cRev2 = window(cRev2, start = c(2008,1), end = c(2018,12))
 
-plot_months(cRev2, main = "Commercial Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
+plot_months(cRev2, main = "Commercial Revenue (2008-2018)", ylab = "Revenue (Millions)", xlab = "Year")
 ```
 
 As in the total revenue series, we remove the data from the 1990s and 2000s as the underlying electricity economy was growing much faster then compared to now.
@@ -371,13 +372,12 @@ The graphs also have spikes at lag 1 although they are both close to the signifi
 Since there is no clear model suggested by the ACF and PACF we now seek additonal candidate models using the armasubsets tool in R.
 
 ```{r, out.width = "75%", fig.cap = "Arma subsets of Seasonally Differenced Commercial Revenue", fig.pos = "H"}
-armas = armasubsets(cRev_diff01, nar = 12, nma = 12)
-plot(armas)
+plot(armasubsets(cRev_diff01, nar = 12, nma = 12))
 ```
 
-Beginning with the seasonally differenced data, the top 2 row of the plots suggest two further strong candidate models (models 2 and 3), an $\ARIMA(2,0,0) \times (1,1,0)_{12}$ and $\ARIMA(1,0,0) \times (0,1,1)_{12}$.
+Beginning with the seasonally differenced data, the second and third rows of the plot suggest two further strong candidate models (models 2 and 3), an $\ARIMA(2,0,0) \times (1,1,0)_{12}$ and $\ARIMA(1,0,0) \times (0,1,1)_{12}$.
 Note that model 3 is similar to the model 1 we guessed at from the ACF and PACF plots but also has a seasonal MA term.
-We can also see that our model 1 shows up as the second to last row on the armasubsets plot, so we can infer that it may be a substantially worse model.
+We can also see that our model 1 shows up as the third to last row on the armasubsets plot, so we can infer that it may be a substantially worse model.
 
 ```{r, out.width = "75%", fig.cap = "Arma subsets of Seasonally and Non-Seasonally Differenced Commercial Revenue", fig.pos = "H"}
 plot(armasubsets(cRev_diff11, nar = 12, nma = 12))
@@ -387,63 +387,138 @@ Continuing with the seasonally and non-seasonally first differenced data, the to
 The top 2 models also include a moving average term of lag 9, although we choose to ignore this as it doesn't appear in the autocorrelation plot and is not parsimonious with a periodicity of 12 that shows up elsewhere in the data.
 Therefore we will take our 4th model to be an $\ARIMA(0,1,1) \times (1,1,0)_{12}$ process.
 
-Finally, we check the extended auto correlation function of each series to evaluate if these models appear in the EACF charts as well.
-
-```{r}
-eacf(cRev_diff01, ar.max = 13, ma.max = 13)
-eacf(cRev_diff11, ar.max = 13, ma.max = 13)
+Finally, we consider addressing the seasonal pattern using a monthly means regression instead of a seasonal difference.
+Since the model also has a small increasing trend over time, we include the time as well.
+The armasubsets function on the residuals of a linear model on the seasonal means and time of the data is
+```{r, out.width = "75%", fig.cap = "Arma Subsets of Regression on Month and Time Residuals", fig.pos = "H"}
+monthsTime_reg = matrix(nrow = length(cRev2), ncol = 12)
+months. = season(cRev2)
+for (i in 1:11){
+  monthsTime_reg[,i] = as.numeric(months. == months.[i])
+}
+monthsTime_reg[,12] = time(cRev2) - 2008
+monthsTime_residuals = lm(cRev2 ~ monthsTime_reg)$residuals
+plot(armasubsets(monthsTime_residuals, nar = 7, nma = 10))
 ```
-
-TODO: write about EACF
+This suggests our final model is an $\ARIMA(2,0,0)$ on the regression residuals.
 
 \subsection{Model Diagnostics}
-We now define our 4 models and evaluate them.
+We now define our 5 models and evaluate them.
 ```{r, echo = FALSE}
 cRev_model1 = arima(cRev2, order = c(1,0,0), seasonal = list(order=c(0,1,0),period= 12))
 cRev_model2 = arima(cRev2, order = c(2,0,0), seasonal = list(order=c(1,1,0),period= 12))
 cRev_model3 = arima(cRev2, order = c(1,0,0), seasonal = list(order=c(0,1,1),period= 12))
 cRev_model4 = arima(cRev2, order = c(0,1,1), seasonal = list(order=c(1,1,0),period= 12))
+cRev_model5 = arima(cRev2, order = c(2, 0, 0), xreg = monthsTime_reg)
 ```
+The five models are defined below.
+The fifth model is described in two tables since it has more parameters.
+
+| Model 1 | AR1 |
+| ----------- | ----------- |
+| Coeff. | 0.7417 |
+| Std. Error | 0.0612 |
+
+| Model 2 | AR1 | AR2 | SAR1|
+| ----------- | ----------- | ----------- | ----------- |
+| Coeff. | 0.6650 | 0.1464 | -0.4407 |
+| Std. Error | 0.0906 | 0.0904 | 0.0958 |
+
+| Model 3 | AR1 | SAR1|
+| ----------- | ----------- | ----------- |
+| Coeff. | 0.8001 | -0.5996 |
+| Std. Error | 0.0591 | 0.1066 |
+
+| Model 4 | MA1 | SAR1|
+| ----------- | ----------- | ----------- |
+| Coeff. | -0.2667 | -0.4496 |
+| Std. Error | 0.0927 | 0.0951 |
+
+| Model 5 | AR1 | AR2 | Intercept | Time | Jan | Feb | Mar |
+| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
+| Coeff. | 0.5517 | 0.2015 | 10.1166 | 0.1119 | 0.2803 | -0.3008 | -0.0326 |
+| Std. Error | 0.0852 | 0.0851 | 0.1514 | 0.0215 | 0.0721 | 0.0820 | 0.0911 |
+
+| Model 5 | Apr | May | Jun | Jul | Aug | Sep | Oct | Nov |
+| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
+| Coeff. | -0.4250 | 0.4665 |  2.0153 | 3.0949 | 3.1378 | 2.042 | 0.9052 | -0.2968 |
+| Std. Error | 0.0721 | 0.0820 | 0.0911 | 0.0962 | 0.0991 | 0.0998 | 0.0987 | 0.0955 | 0.090 | 0.0803 | 0.0700 |
 
 The first test we will perform is the runs test which checks if the residuals have remaining correlations.
-The runs test p-values on the 4 models are:
+The runs test p-values on the models are:
 ```{r}
-runs_tests = vector(mode = "numeric", length = 4)
+runs_tests = vector(mode = "numeric", length = 5)
 runs_tests[1] = runs(cRev_model1$residuals)$pvalue
 runs_tests[2] = runs(cRev_model2$residuals)$pvalue
 runs_tests[3] = runs(cRev_model3$residuals)$pvalue
 runs_tests[4] = runs(cRev_model4$residuals)$pvalue
+runs_tests[5] = runs(cRev_model5$residuals)$pvalue
 print(runs_tests)
 ```
 
-We see that models 1, 2, and 3 all have p-values above 0.05 indicating that they pass the runs test.
-However, model 3 has a significantly larger p-value than the first two indicating it more comfortably passes the test.
-Model 4 does not pass the test, and a more detailed look at the ouput shows that it has only 54 observed runs compared to 67.3 expected runs.
+We see that models 1, 2, 3, and 5 all have p-values above 0.05 indicating that they pass the runs test.
+However, models 3 and 5 have a significantly larger p-value than the first two indicating they more comfortably pass the test.
+Model 4 does not pass the test, and a more detailed look at the output shows that it has only 54 observed runs compared to 67.3 expected runs.
 This indicates that the residuals from model 4 still are positively correlated.
 
-Moving on to the Wilkes-Shapiro test, this tests the models residuals for normality.
-The p-values of the 4 models are 
+Moving on to the Shapiro-Wilk test, this tests the models residuals for normality.
+The p-values of the 5 models are 
 ```{r}
-shapiro_tests = vector(mode = "numeric", length = 4)
+shapiro_tests = vector(mode = "numeric", length = 5)
 shapiro_tests[1] = shapiro.test(cRev_model1$residuals)$p.value
 shapiro_tests[2] = shapiro.test(cRev_model2$residuals)$p.value
 shapiro_tests[3] = shapiro.test(cRev_model3$residuals)$p.value
 shapiro_tests[4] = shapiro.test(cRev_model4$residuals)$p.value
+shapiro_tests[5] = shapiro.test(cRev_model5$residuals)$p.value
 print(shapiro_tests)
 ```
 In fact, we see that all of the models fail the Shapiro-Wilk test so this won't help us much in deciding which is best.
 
 We can consider the Ljung-Box test which also checks if the correlations between the residuals are significant.
-We will use a lag of 15 since we models that don't capture seasonal effects correctly on this dataset may exhibit significant autocorrelations at lags of 13 - 15.
+Since our dataset is seasonal with lag 12 we use the default value of including 12 autocorrelations in the Ljung-Box test.
 The p-values from the Ljung-Box test are
 ```{r}
-LB_tests = vector(mode = "numeric", length = 4)
+LB_tests = vector(mode = "numeric", length = 5)
 LB_tests[1] = LB.test(cRev_model1)$p.value
 LB_tests[2] = LB.test(cRev_model2)$p.value
 LB_tests[3] = LB.test(cRev_model3)$p.value
 LB_tests[4] = LB.test(cRev_model4)$p.value
+LB_tests[5] = LB.test(cRev_model5)$p.value
 print(LB_tests)
 ```
+We see that model 1 fails the Ljung-Box test while the rest pass it.
+
+Finally we can compare the Akaike Information Criterion (AIC) and Bayesian Information Criteria (BIC) of each model.
+The AIC and BIC values are
+```{r}
+AIC_df = AIC(cRev_model1, cRev_model2, cRev_model3, cRev_model4, cRev_model5)
+BIC_df = BIC(cRev_model1, cRev_model2, cRev_model3, cRev_model4, cRev_model5)
+print(AIC_df$AIC)
+print(BIC_df$BIC)
+```
+Since models 1 and 4 failed the runs test and Ljung-Box test respectively we are mainly choosing between models 2, 3, and 5.
+Note that models 1 and 4 also have the worst AIC and BIC values, so the AIC and BIC largely agree with the previous tests.
+Model 5 has by far the best AIC but also the worst BIC of these three models. 
+Nevertheless, we will select model 5 as the best model since most of the parameters in the model are significant and we think BIC is excessively penalizing its higher number of parameters.
+
+Since we proceed with model 5 we will also check it's QQ-plot and histogram for normality.
+We note though that since the model failed the Shapiro-Wilk test, we do not expect these to look normal.
+```{r, out.width="49%"}
+hist(cRev_model5$residuals)
+qqnorm(rstandard(cRev_model5), main = "Normal Q-Q Plot for Model 5")
+qqline(rstandard(cRev_model5))
+```
+Indeed, the histogram shows substantial leftward skew and the QQ plot clearly deviates from it's expected line at positive quantiles above 1.
+
+The full summary of test results is given in the table below:
+
+|  | Model 1 | Model 2 | Model 3 | Model 4| Model 5 |
+| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
+| Runs Test | 0.3100 $\greencheck$ | 0.2790 $\greencheck$ | 0.5770 $\greencheck$ | 0.0313 $\redex$| 0.5680 $\greencheck$ |
+| Shapiro-Wilk Test | 2.5461e-03 $\redex$| 1.7742e-03 $\redex$| 1.3225e-04 $\redex$| 1.7099e-02 $\redex$| 2.8539e-04 $\redex$|
+| Box-Ljung Test | 0.0012 $\redex$| 0.5636 $\greencheck$| 0.2234 $\greencheck$| 0.6819 $\greencheck$| 0.9748 $\greencheck$|
+| AIC | 44.332803 | 27.739551 | 22.511076 | 33.798884 | -4.392709 |
+| BIC | 49.90779 | 38.88952 | 30.87355 | 42.13625 | 41.73212 |
 
 \subsection{Forecasting}
 
