@@ -441,7 +441,7 @@ The fifth model is described in two tables since it has more parameters.
 | Model 5 | Apr | May | Jun | Jul | Aug | Sep | Oct | Nov | $\sigma^2$ |
 | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
 | Coeff. | -0.4250 | 0.4665 |  2.0153 | 3.0949 | 3.1378 | 2.042 | 0.9052 | -0.2968 | 0.0442 |
-| Std. Error | 0.0721 | 0.0820 | 0.0911 | 0.0962 | 0.0991 | 0.0998 | 0.0987 | 0.0955 | 0.090 | 0.0803 | 0.0700 |
+| Std. Error | 0.0911 | 0.0962 | 0.0991 | 0.0998 | 0.0987 | 0.0955 | 0.090 | 0.0803 | 0.0700 |
 
 The first test we will perform is the runs test which checks if the residuals have remaining correlations.
 The runs test p-values on the models are:
@@ -548,7 +548,7 @@ Further evidence for this theory is given by the fact that our models prediction
 
 \section{Discussion \& Conclusion}
 
-In conclusion, this project explores time series data for U.S. electricity revenue from 2008-Present. Through trying various transformations and differencing approaches, we arrive at a handful of d models. These models are tested for independence, randomness, normality, and "good-ness of fit", from we select a single model. The selected model is then used to analyze held-out data as well as forecast future observations.
+In conclusion, this project explores time series data for U.S. electricity revenue from 2008-Present. Through trying various transformations and differencing approaches, we arrive at a handful of d models. These models are tested for independence, randomness, normality, and "good-ness of fit", from which we select a single model. The selected model is then used to analyze held-out data as well as forecast future observations.
 In the case of total revenue, our final model was an $\ARIMA(0,1,1)\times (1,1,1)_{12}$. We found this model captures the seasonality of our data fairly well, as for to capture all of our held-out data within a 95% confidence interval. However, we note that our model seemed to have a slight postive bias, overpredicting most points. We hypothesize that this is due to the global influence of the novel COVID-19 virus causing a measurable decrease due to lockdowns across the country.
 
 \section{References}
