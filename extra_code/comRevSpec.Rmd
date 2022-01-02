@@ -1,0 +1,233 @@
+---
+title: "Model Specification"
+author: "Steven Litvack-Winkler"
+date: "5/1/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=8, fig.height=5) 
+
+library(TSA)
+library(readr)
+```
+
+## Importing/Processing Data
+
+```{r, message=FALSE}
+data <- read_csv("sales_revenue_clean.csv")
+```
+## Custom functions
+
+#### Plot function
+```{r}
+plot_months <- function(series,  main = "title", ylab = "value", xlab = "Time") {
+  Month=c('J','F','M','A','M','J','J','A','S','O','N','D')
+  
+  plot(series, main = main, ylab = ylab, xlab = xlab)
+  points(series,pch=Month)
+}
+```
+
+#### Series diagnostics
+```{r}
+stationary_test <- function(series){
+  acf(series)
+  pacf(series)
+  print(runs(series))
+  print(shapiro.test(series))
+}
+```
+
+```{r}
+cRev <- ts(data$C_Revenue/1000000,start=c(1990,1),frequency=12)
+plot_months(cRev, main = "Commercial Revenue (1990-2020)", ylab = "Revenue (Millions)", xlab = "Year")
+```
+
+```{r}
+cRev2 = window(cRev, start = c(2008, 1))
+
+
+# hold actual data for later predictions
+actual = window(cRev2, start = c(2019,1))
+cRev2 = window(cRev2, start = c(2008,1), end = c(2019,1))
+
+plot_months(cRev2, main = "Commercial Revenue (2008-2019)", ylab = "Revenue (Millions)", xlab = "Year")
+
+
+```
+
+```{r}
+acf(cRev2, main = "ACF of Total Revenue (2008-2020)")
+pacf(cRev2)
+
+```
+
+
+```{r}
+bc = BoxCox.ar(cRev2)
+```
+
+
+```{r}
+recRev = cRev2^(1)
+actual = actual^(1)
+
+plot_months(recRev, main = "Transformed Revenue (2008-2020)", ylab = "Revenue", xlab = "Year")
+acf(recRev, main = "Commercial Revenue ACF")
+pacf(recRev)
+
+```
+
+
+
+```{r}
+diffRev = diff(recRev)
+plot_months(diffRev, main = "First Difference of Revenue", ylab = "First Difference of Revenue", xlab = "Year")
+
+secDiffRev = diff(diffRev)
+
+acf(diffRev, main = "First Difference ACF")
+acf(secDiffRev)
+```
+
+
+```{r}
+seasDiffRev = diff(diffRev, lag = 12)
+plot_months(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference of Revenue", ylab = "First Non-Seasonal and Seasonal Difference", xlab = "Year")
+acf(seasDiffRev, main = "First Non-Seasonal and Seasonal Difference ACF")
+pacf(seasDiffRev)
+```
+
+
+```{r}
+eacf(seasDiffRev, ar.max = 12)
+plot(armasubsets(seasDiffRev, nar = 12, nma = 12))
+plot(armasubsets(diff(cRev2, lag = 12), nar = 12, nma = 12))
+
+plot(armasubsets(recRev, nar = 12, nma = 12))
+plot(armasubsets(diffRev, nar = 12, nma = 12))
+
+plot(armasubsets(secDiffRev, nar = 12, nma = 12))
+```
+
+
+```{r}
+model1 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(1,1,1),period= 12))
+model2 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(1,1,2),period= 12))
+
+model3 = arima(recRev, order = c(0,1,1), seasonal = list(order=c(2,1,1),period= 12))
+model4 = arima(recRev, order = c(0,1,2), seasonal = list(order=c(1,1,1),period= 12))
+
+model4 = arima(recRev, order = c(0,1,2), seasonal = list(order=c(1,1,1),period= 12))
+```
+
+```{r}
+cRev_model1
+cRev_model2
+cRev_model3
+cRev_model4
+```
+
+
+```{r}
+model1
+model2
+model3
+model4
+```
+
+
+
+```{r}
+#library(forecast)
+#model4 <-auto.arima(recRev)
+#model4 = arima(recRev, order = c(2,0,0), seasonal = list(order=c(0,1,1),period= 12))
+#model4
+```
+
+
+```{r}
+res1 = rstandard(model1) 
+res2 = rstandard(model2)
+res3 = rstandard(model3)
+res4 = rstandard(model4)
+```
+
+
+
+```{r}
+runs(res1)
+hist(res1)
+qqnorm(res1)
+qqline(res1)
+shapiro.test(res1)
+LB.test(model1)
+```
+
+```{r}
+runs(res2)
+hist(res2)
+qqnorm(res2)
+qqline(res2)
+shapiro.test(res2)
+LB.test(model2)
+```
+
+
+```{r}
+runs(res3)
+hist(res3)
+qqnorm(res3)
+qqline(res3)
+shapiro.test(res3)
+LB.test(model3)
+```
+```{r}
+runs(res4)
+hist(res4)
+qqnorm(res4)
+qqline(res4)
+shapiro.test(res4)
+LB.test(model4)
+```
+
+
+```{r}
+
+model = arima(recRev, order = c(0,1,0), seasonal = list(order=c(0,1,1),period= 12))
+plot(fitted(model), col = 'red',  main = "Plotting Revenue With Model 1", ylab = "Revenue", xlab = "Years")
+lines(recRev, pch = 3)
+
+
+model <- model1
+
+plot(res1, main = "Standardized Residuals of Model 1", ylab = "Residuals")
+acf(res1)
+hist(res1)
+```
+
+```{r}
+num = length(actual)
+res = plot(model,n.ahead=num, n1 = c(2016,2), col = "red", main = "ARIMA(0,1,1)x(1,1,1)_12 Forecast", ylab ="Revenue", xlab = "Year")
+lines(actual,pch=3) 
+abline(h=coef(model)[names(coef(model))=='intercept'])
+```
+
+```{r}
+num = length(actual)
+res = plot(model,n.ahead=36, col = "red", main = "Beyond 2020", ylab = "Revenue", xlab = "Year")
+abline(h=coef(model)[names(coef(model))=='intercept'])
+```
+
+Try and build regression matrix with months, also time.
+```{r}
+months_reg = matrix(nrow = length(cRev2), ncol = 11)
+months. = season(cRev2)
+for (i in 1:11){
+  months_reg[,i] = as.numeric(months. == months.[i])
+}
+```
+
+
