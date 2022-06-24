@@ -62,7 +62,11 @@ stationary_test <- function(series){
   print(runs(series))
   print(shapiro.test(series))
 }
+```
 
+## Introduction
+
+```{r, results='hide', fig.show='hide'}
 Month=c('J','F','M','A','M','J','J','A','S','O','N','D')
 
 plot(totalSales, main = "Total Sales")
@@ -88,6 +92,7 @@ legend(x = 'topleft',
        col = 4:1, lwd = 2)
 
 ```
+
 
 ## Total Revenue
 
