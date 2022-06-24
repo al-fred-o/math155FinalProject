@@ -1,7 +1,7 @@
 # math155FinalProject
 
-This project was completed in the spring semester 2021 for my Time Series Analysis course at Harvey Mudd College. 
-Done in collaboration with [Alfredo Gomez](https://al-fred-o.github.io/).
+This project was completed in the spring semester 2021 for a Time Series Analysis course at Harvey Mudd College. 
+Done in collaboration by [Alfredo Gomez](https://al-fred-o.github.io/) and [Steven Litvack-Winkler](https://github.com/stevenlw-porpoise).
 
 #### Abstract
 We describe a time series model for the total electricity consumption of the United States from 2008
